@@ -33,20 +33,26 @@
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
   .header h1 { font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
   .controls { display: flex; gap: 12px; }
-  button { font-weight: 600; cursor: pointer; transition: all 0.1s ease; border-radius: 6px; }
+  
+  button, input { font-weight: 600; border-radius: 6px; outline: none; }
+  button { cursor: pointer; transition: all 0.1s ease; }
   
   .btn-clear { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 8px 16px; font-size: 13px; }
   .btn-clear:hover { background: var(--danger); color: #fff; }
   .btn-theme { background: var(--card); border: 1px solid var(--border); color: var(--text); width: 38px; height: 38px; font-size: 16px; }
 
-  .track-list { display: flex; flex-direction: column; gap: 12px; }
+  h2 { font-size: 18px; font-weight: 800; text-transform: uppercase; color: var(--accent); margin: 30px 0 15px 0; letter-spacing: 0.5px; }
+
+  .track-list, .message-list, .cal-list { display: flex; flex-direction: column; gap: 12px; }
   
-  .track-card { 
+  /* Style des cartes */
+  .track-card, .msg-card, .cal-card { 
     display: flex; align-items: center; 
     background: var(--card); border: 1px solid var(--border); 
     padding: 16px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   }
   
+  /* Classement : Le premier du classement s'illumine en bleu */
   .track-card.top-track { border-color: var(--accent); background: linear-gradient(145deg, var(--card), rgba(69, 243, 255, 0.03)); }
   .track-card.top-track .votes { color: var(--accent); font-size: 32px; }
 
@@ -56,11 +62,24 @@
   .title { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
   .artist { font-size: 14px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.5px; }
 
+  /* Gros bouton DONE vert */
   .btn-done { background: #238636; color: #fff; border: none; width: 48px; height: 48px; font-size: 20px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
   .btn-done:hover { background: #2ea043; transform: scale(1.05); }
   .btn-done:active { transform: scale(0.95); }
 
-  .empty { text-align: center; padding: 60px 0; color: var(--text-dim); font-size: 15px; font-style: italic; }
+  /* Style Messages */
+  .msg-pseudo { font-weight: 800; color: var(--accent); font-size: 14px; text-transform: uppercase; margin-bottom: 2px; }
+  .msg-text { font-size: 16px; color: #fff; }
+  :root[data-theme="light"] .msg-text { color: #1a1a1a; }
+  .msg-time { font-size: 12px; color: var(--text-dim); margin-left: auto; opacity: 0.7; }
+
+  /* Formulaire Calendrier */
+  .cal-inputs { display: flex; gap: 10px; margin-bottom: 12px; }
+  .cal-inputs input { flex: 1; background: var(--card); border: 1px solid var(--border); color: #fff; padding: 12px; font-size: 14px; }
+  :root[data-theme="light"] .cal-inputs input { color: #1a1a1a; }
+  .btn-add-cal { background: var(--accent); color: #0b0c10; border: none; padding: 0 20px; font-weight: bold; }
+
+  .empty { text-align: center; padding: 30px 0; color: var(--text-dim); font-size: 15px; font-style: italic; }
 </style>
 </head>
 <body>
@@ -69,249 +88,34 @@
   <div class="header">
     <h1>Demandes Titres</h1>
     <div class="controls">
+      <button class="btn-clear" id="clear-msg-btn" style="border-color: var(--text-dim); color: var(--text-dim);">Vider Messages</button>
       <button class="btn-clear" id="clear-btn">Tout effacer</button>
       <button class="btn-theme" id="theme-toggle">☀</button>
     </div>
   </div>
 
+  <h2>🎵 Playlist des Invités (Classée par votes)</h2>
   <div class="track-list" id="main-list">
     <div class="empty">Chargement de la playlist...</div>
   </div>
-</div>
 
-<script>
-const $ = (id) => document.getElementById(id);
-function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-
-// Gestion robuste du Thème pour éviter les blocages au démarrage
-function applyTheme(t){
-  const el = $('theme-toggle');
-  document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem('floor_theme', t);
-  if (el) el.textContent = t === 'dark' ? '☀' : '☾';
-}
-applyTheme(localStorage.getItem('floor_theme') || 'dark');
-
-const toggleBtn = $('theme-toggle');
-if (toggleBtn) {
-  toggleBtn.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme');
-    applyTheme(current === 'dark' ? 'light' : 'dark');
-  });
-}
-
-// Fonction de synchronisation automatique HTTP Fetch
-async function updateDashboard() {
-  try {
-    const res = await fetch('/api/requests');
-    const listContainer = $('main-list');
-    if (!listContainer) return;
-
-    if (!res.ok) {
-      listContainer.innerHTML = `
-        <div class="empty" style="color:var(--danger); font-weight:bold;">
-          ❌ ERREUR SERVEUR : ${res.status}<br>
-          <span style="font-size:12px; color:var(--text)">Le serveur rencontre un problème temporaire.</span>
-        </div>`;
-      return;
-    }
-
-    const data = await res.json();
-    const items = data.requests || [];
-
-    if (items.length === 0) {
-      listContainer.innerHTML = '<div class="empty">Aucun morceau demandé pour le moment.</div>';
-      return;
-    }
-
-    listContainer.innerHTML = items.map((track, index) => {
-      const isTop = index === 0;
-      return `
-        <div class="track-card ${isTop ? 'top-track' : ''}">
-          <div class="votes">${String(track.votes).padStart(2, '0')}</div>
-          <div class="meta">
-            <div class="title">${escapeHtml(track.title)}</div>
-            <div class="artist">${track.artist ? escapeHtml(track.artist) : 'Artiste non spécifié'}</div>
-          </div>
-          <button class="btn-done" data-id="${track.id}" title="Marquer comme joué">✓</button>
-        </div>
-      `;
-    }).join('');
-
-    // Actions individuelles sur les boutons "✓"
-    listContainer.querySelectorAll('.btn-done').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.id;
-        try {
-          await fetch(`/api/dj/done/${id}`, { method: 'POST' });
-          updateDashboard();
-        } catch(e) {
-          console.error("Erreur de suppression :", e);
-        }
-      });
-    });
-
-  } catch (err) {
-    const listContainer = $('main-list');
-    if (listContainer) {
-      listContainer.innerHTML = `
-        <div class="empty" style="color:var(--danger); font-weight:bold;">
-          ⚠️ ERREUR RECONEXION AUTOMATIQUE...<br>
-          <span style="font-size:12px; font-weight:normal; color:var(--text-dim)">Tentative de synchronisation en cours...</span>
-        </div>`;
-    }
-  }
-}
-
-// Action globale "Tout effacer"
-const clearBtn = $('clear-btn');
-if (clearBtn) {
-  clearBtn.addEventListener('click', async () => {
-    if (confirm('Voulez-vous réinitialiser toute la liste de demandes ?')) {
-      try {
-        await fetch('/api/dj/clear', { method: 'POST' });
-        updateDashboard();
-      } catch(e) {
-        console.error("Erreur de nettoyage :", e);
-      }
-    }
-  });
-}
-
-// Initialisation et boucle infinie (toutes les 2 secondes)
-updateDashboard();
-setInterval(updateDashboard, 2000);
-<div style="text-align: center; padding: 20px; color: var(--text-dim); font-size: 12px; font-weight: bold; letter-spacing: 1px; opacity: 0.5;">
-  v1.0.0
-</div>
-</script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="fr" data-theme="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DJ Dashboard — v1.0</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0b0c10;
-    --card: #1f2833;
-    --text: #ffffff;
-    --text-dim: #c5a059;
-    --accent: #45f3ff;
-    --danger: #ff4b5c;
-    --border: #2c3540;
-    --success: #238636;
-  }
-  :root[data-theme="light"] {
-    --bg: #f4f6f9;
-    --card: #ffffff;
-    --text: #1a1a1a;
-    --text-dim: #666666;
-    --accent: #0070f3;
-    --danger: #e0245e;
-    --border: #e1e8ed;
-    --success: #2ea043;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-  body { background: var(--bg); color: var(--text); padding: 20px; transition: background 0.2s; }
-  .container { max-width: 1100px; margin: 0 auto; }
-
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
-  .header h1 { font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-  .controls { display: flex; gap: 12px; }
-  
-  button, input { font-weight: 600; border-radius: 6px; }
-  button { cursor: pointer; transition: all 0.1s ease; }
-  
-  .btn-clear { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 8px 16px; font-size: 13px; }
-  .btn-clear:hover { background: var(--danger); color: #fff; }
-  .btn-theme { background: var(--card); border: 1px solid var(--border); color: var(--text); width: 38px; height: 38px; font-size: 16px; }
-
-  /* Layout 3 colonnes responsive */
-  .grid-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-  @media (max-width: 900px) { .grid-layout { grid-template-columns: 1fr; } }
-
-  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; height: fit-content; }
-  .panel h2 { font-size: 18px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-
-  .track-list, .message-list { display: flex; flex-direction: column; gap: 12px; }
-  
-  /* Cartes Musique */
-  .track-card { display: flex; align-items: center; background: rgba(0,0,0,0.15); border: 1px solid var(--border); padding: 16px; border-radius: 8px; }
-  .track-card.top-track { border-color: var(--accent); background: linear-gradient(145deg, rgba(0,0,0,0.2), rgba(69, 243, 255, 0.03)); }
-  .track-card.top-track .votes { color: var(--accent); font-size: 32px; }
-  .votes { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; min-width: 60px; text-align: center; margin-right: 16px; color: var(--text-dim); }
-  .meta { flex: 1; min-width: 0; padding-right: 15px; }
-  .title { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .artist { font-size: 14px; color: var(--text-dim); }
-  .btn-done { background: var(--success); color: #fff; border: none; width: 48px; height: 48px; font-size: 20px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
-
-  /* Style Messages */
-  .msg-card { background: rgba(0,0,0,0.15); border: 1px solid var(--border); padding: 12px; border-radius: 8px; position: relative; }
-  .msg-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
-  .msg-pseudo { font-weight: bold; color: var(--accent); }
-  .msg-time { color: var(--text-dim); opacity: 0.7; }
-  .msg-text { font-size: 14px; word-break: break-word; }
-
-  /* Formulaire Calendrier */
-  .cal-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
-  .cal-form input { background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: #fff; padding: 10px; font-size: 14px; }
-  :root[data-theme="light"] .cal-form input { color: #000; background: #fff; }
-  .btn-add-cal { background: var(--accent); color: #0b0c10; border: none; padding: 10px; font-weight: bold; }
-
-  .date-item { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 4px; font-size: 13px; margin-bottom: 6px; border-left: 3px solid var(--accent); }
-
-  .empty { text-align: center; padding: 30px 0; color: var(--text-dim); font-size: 14px; font-style: italic; }
-</style>
-</head>
-<body>
-
-<div class="container">
-  <div class="header">
-    <h1>Dashboard DJ</h1>
-    <div class="controls">
-      <button class="btn-clear" id="clear-btn">Vider Musiques</button>
-      <button class="btn-clear" id="clear-msg-btn" style="border-color:var(--text-dim); color:var(--text-dim);">Vider Messages</button>
-      <button class="btn-theme" id="theme-toggle">☀</button>
-    </div>
+  <h2>💬 Messages en Direct</h2>
+  <div class="message-list" id="msg-list">
+    <div class="empty">Aucun message pour le moment.</div>
   </div>
 
-  <div class="grid-layout">
-    <div class="panel">
-      <h2>🎵 Demandes de Titres</h2>
-      <div class="track-list" id="main-list">
-        <div class="empty">Chargement...</div>
-      </div>
-    </div>
-
-    <div style="display:flex; flex-direction:column; gap:20px;">
-      <div class="panel">
-        <h2>💬 Messages Invités</h2>
-        <div class="message-list" id="msg-list">
-          <div class="empty">Aucun message...</div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>📅 Mon Calendrier</h2>
-        <div class="cal-form">
-          <input type="text" id="cal-date" placeholder="Ex: Samedi 12 Octobre">
-          <input type="text" id="cal-loc" placeholder="Ex: Club Le Privé, Paris">
-          <button class="btn-add-cal" id="add-cal-btn">Ajouter la Date</button>
-        </div>
-        <div id="cal-list"></div>
-      </div>
-    </div>
+  <h2>📅 Ajouter une date au calendrier</h2>
+  <div class="cal-inputs">
+    <input type="text" id="cal-date" placeholder="Ex: Samedi 12 Octobre">
+    <input type="text" id="cal-loc" placeholder="Ex: Club Le Privé, Paris">
+    <button class="btn-add-cal" id="add-cal-btn">Ajouter</button>
+  </div>
+  <div class="cal-list" id="cal-list">
+    <div class="empty">Aucune date planifiée.</div>
   </div>
 
-  <div style="text-align: center; padding: 40px 20px 20px 20px; color: var(--text-dim); font-size: 12px; font-weight: bold; letter-spacing: 1px; opacity: 0.5;">
-    v1.0 hi gemini
+  <div style="text-align: center; padding: 60px 20px 20px 20px; color: var(--text-dim); font-size: 12px; font-weight: bold; letter-spacing: 1px; opacity: 0.5;">
+    1.1.0
   </div>
 </div>
 
@@ -319,7 +123,7 @@ setInterval(updateDashboard, 2000);
 const $ = (id) => document.getElementById(id);
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-// Thème
+// Gestion du Thème
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('floor_theme', t);
@@ -330,25 +134,25 @@ $('theme-toggle').addEventListener('click', () => {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 });
 
-// Synchronisation Globale
+// Synchronisation et Classement automatique
 async function updateDashboard() {
   try {
-    // 1. Charger Musiques
+    // Récupération des musiques (le serveur renvoie la liste déjà triée par votes)
     const resReq = await fetch('/api/requests');
     if (resReq.ok) {
       const data = await resReq.json();
       const items = data.requests || [];
-      $('main-list').innerHTML = items.length === 0 ? '<div class="empty">Aucun morceau demandé.</div>' : items.map((track, idx) => `
-        <div class="track-card ${idx === 0 ? 'top-track' : ''}">
+      $('main-list').innerHTML = items.length === 0 ? '<div class="empty">Aucun morceau demandé pour le moment.</div>' : items.map((track, index) => `
+        <div class="track-card ${index === 0 ? 'top-track' : ''}">
           <div class="votes">${String(track.votes).padStart(2, '0')}</div>
           <div class="meta">
             <div class="title">${escapeHtml(track.title)}</div>
-            <div class="artist">${escapeHtml(track.artist || 'Artiste non spécifié')}</div>
+            <div class="artist">${track.artist ? escapeHtml(track.artist) : 'Artiste non spécifié'}</div>
           </div>
           <button class="btn-done" data-id="${track.id}">✓</button>
         </div>
       `).join('');
-      
+
       $('main-list').querySelectorAll('.btn-done').forEach(btn => {
         btn.addEventListener('click', async () => {
           await fetch(`/api/dj/done/${btn.dataset.id}`, { method: 'POST' });
@@ -357,52 +161,52 @@ async function updateDashboard() {
       });
     }
 
-    // 2. Charger Messages
+    // Récupération des Messages
     const resMsg = await fetch('/api/messages');
     if (resMsg.ok) {
       const data = await resMsg.json();
       const msgs = data.messages || [];
       $('msg-list').innerHTML = msgs.length === 0 ? '<div class="empty">Aucun message reçu.</div>' : msgs.map(m => `
         <div class="msg-card">
-          <div class="msg-header">
-            <span class="msg-pseudo">${escapeHtml(m.pseudo)}</span>
-            <span class="msg-time">${m.time}</span>
+          <div class="meta">
+            <div class="msg-pseudo">${escapeHtml(m.pseudo)}</div>
+            <div class="msg-text">${escapeHtml(m.text)}</div>
           </div>
-          <div class="msg-text">${escapeHtml(m.text)}</div>
+          <div class="msg-time">${m.time}</div>
         </div>
-      `).reverse().join(''); // Les plus récents en haut
+      `).reverse().join('');
     }
 
-    // 3. Charger Calendrier
+    // Récupération du Calendrier
     const resCal = await fetch('/api/dates');
     if (resCal.ok) {
       const data = await resCal.json();
       const dates = data.dates || [];
-      $('cal-list').innerHTML = dates.length === 0 ? '<div class="empty">Aucune date prévue.</div>' : dates.map(d => `
-        <div class="date-item">
-          <strong>${escapeHtml(d.date)}</strong>
-          <span>${escapeHtml(d.location)}</span>
+      $('cal-list').innerHTML = dates.length === 0 ? '<div class="empty">Aucune date affichée.</div>' : dates.map(d => `
+        <div class="cal-card">
+          <div class="meta">
+            <div class="title">${escapeHtml(d.date)}</div>
+            <div class="artist" style="color: var(--accent);">${escapeHtml(d.location)}</div>
+          </div>
         </div>
       `).join('');
     }
-
-  } catch (err) { console.error("Erreur synchro:", err); }
+  } catch (err) { console.error(err); }
 }
 
-// Boutons Effacer
+// Boutons de nettoyage
 $('clear-btn').addEventListener('click', async () => {
-  if (confirm('Vider la playlist ?')) { await fetch('/api/dj/clear', { method: 'POST' }); updateDashboard(); }
+  if (confirm('Voulez-vous vider la playlist ?')) { await fetch('/api/dj/clear', { method: 'POST' }); updateDashboard(); }
 });
 $('clear-msg-btn').addEventListener('click', async () => {
-  if (confirm('Effacer tous les messages ?')) { await fetch('/api/dj/messages/clear', { method: 'POST' }); updateDashboard(); }
+  if (confirm('Voulez-vous supprimer tous les messages ?')) { await fetch('/api/dj/messages/clear', { method: 'POST' }); updateDashboard(); }
 });
 
-// Ajouter date calendrier
+// Ajouter au calendrier
 $('add-cal-btn').addEventListener('click', async () => {
   const date = $('cal-date').value.trim();
   const location = $('cal-loc').value.trim();
-  if(!date || !location) return alert('Remplis les deux champs calendrier !');
-  
+  if(!date || !location) return;
   await fetch('/api/dj/dates', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
