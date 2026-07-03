@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Demande un titre</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght=500;700&family=JetBrains+Mono:wght=500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#f5f3ec;
@@ -19,6 +19,7 @@
     --torn:#d8d4c4;
     --overlay:rgba(20,18,10,.5);
     --hero-bg:#eef4fd;
+    --like:#e0245e;
   }
   :root[data-theme="dark"]{
     --bg:#14151c;
@@ -32,6 +33,7 @@
     --torn:#3a3d4d;
     --overlay:rgba(10,10,14,.72);
     --hero-bg:#1a2536;
+    --like:#ff4b72;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{
@@ -82,7 +84,6 @@
 
   .wrap{max-width:520px;margin:0 auto;padding:0 20px;}
 
-  /* --- Cagnotte : element principal --- */
   .hero{
     margin-top:22px;
     background:var(--hero-bg);
@@ -200,7 +201,7 @@
     font-family:'JetBrains Mono',monospace;
     font-weight:700;
     font-size:20px;
-    color:var(--accent);
+    color:var(--like);
     background:var(--bg);
     width:56px;
     display:flex;
@@ -234,26 +235,29 @@
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .vote-btn{
+  .like-btn{
     flex-shrink:0;
     background:transparent;
-    border:1px solid var(--accent);
-    color:var(--accent);
+    border:1px solid var(--like);
+    color:var(--like);
     border-radius:3px;
-    padding:8px 14px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
+    padding:6px 12px;
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
     font-weight:700;
     text-transform:uppercase;
-    letter-spacing:.06em;
     cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:4px;
   }
-  .vote-btn:disabled{
+  .like-btn:disabled{
     border-color:var(--paper-line);
+    background:var(--bg);
     color:var(--ink-dim);
     cursor:default;
   }
-  .vote-btn:active:not(:disabled){transform:translateY(1px);}
+  .like-btn:active:not(:disabled){transform:scale(0.95);}
 
   .empty{
     font-family:'JetBrains Mono',monospace;
@@ -375,7 +379,7 @@
     <button class="submit" id="submit-btn">Envoyer au DJ</button>
   </div>
 
-  <div class="section-title">File d'attente</div>
+  <div class="section-title">Les morceaux les plus demandés 🔥</div>
   <div id="vote-list"></div>
 </div>
 
@@ -401,7 +405,7 @@
 const $ = (id) => document.getElementById(id);
 const CAGNOTTE_URL = 'https://www.lepotcommun.fr/cagnotte/festive/ma-prochaine-platine-kc35w9qk?_se=YXVndXN0aW4uZmxvcXVldEBpY2xvdWQuY29t';
 
-// ---- Theme (clair par defaut) ----
+// ---- Theme ----
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('floor_theme', t);
@@ -437,7 +441,7 @@ $('copy-link-btn').addEventListener('click', async () => {
   }
 });
 
-// ---- Voting ----
+// ---- Likes ----
 const VOTED_KEY = 'floor_request_voted_ids';
 function getVoted(){
   try { return JSON.parse(localStorage.getItem(VOTED_KEY) || '[]'); }
@@ -458,15 +462,20 @@ function showToast(msg){
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
+// Connexion relative automatique s'adaptant à Render
+const API_BASE = window.location.origin;
+
 $('submit-btn').addEventListener('click', async () => {
   const title = $('f-title').value.trim();
   const artist = $('f-artist').value.trim();
   if(!title) return;
-  await fetch('/api/request', {
+  
+  await fetch(`${API_BASE}/api/request`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, artist }),
   });
+  
   $('f-title').value = '';
   $('f-artist').value = '';
   showToast('Demande envoyée');
@@ -474,45 +483,53 @@ $('submit-btn').addEventListener('click', async () => {
 });
 
 async function loadVoteList(){
-  const res = await fetch('/api/requests');
-  const data = await res.json();
-  const voted = getVoted();
-  const box = $('vote-list');
+  try {
+    const res = await fetch(`${API_BASE}/api/requests`);
+    const data = await res.json();
+    const voted = getVoted();
+    const box = $('vote-list');
 
-  if(data.requests.length === 0){
-    box.innerHTML = '<div class="empty">Aucune demande pour l\'instant — sois le premier</div>';
-    return;
-  }
+    if(!data.requests || data.requests.length === 0){
+      box.innerHTML = '<div class="empty">Aucune demande pour l\'instant — sois le premier</div>';
+      return;
+    }
 
-  box.innerHTML = data.requests.map((r) => {
-    const already = voted.includes(r.id);
-    return `
-      <div class="ticket">
-        <div class="ticket-num mono">${String(r.votes).padStart(2,'0')}</div>
-        <div class="ticket-body">
-          <div class="ticket-meta">
-            <div class="t">${escapeHtml(r.title)}</div>
-            <div class="a">${r.artist ? escapeHtml(r.artist) : 'artiste non precise'}</div>
+    box.innerHTML = data.requests.map((r) => {
+      const already = voted.includes(r.id);
+      return `
+        <div class="ticket">
+          <div class="ticket-num mono">${String(r.votes).padStart(2,'0')}</div>
+          <div class="ticket-body">
+            <div class="ticket-meta">
+              <div class="t">${escapeHtml(r.title)}</div>
+              <div class="a">${r.artist ? escapeHtml(r.artist) : 'artiste non précisé'}</div>
+            </div>
+            <button class="like-btn" data-id="${r.id}" ${already ? 'disabled' : ''}>
+              ${already ? '❤️ Liké' : '❤️ Like'}
+            </button>
           </div>
-          <button class="vote-btn" data-id="${r.id}" ${already ? 'disabled' : ''}>${already ? 'Voté' : 'Voter'}</button>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
 
-  box.querySelectorAll('.vote-btn:not(:disabled)').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = btn.dataset.id;
-      btn.disabled = true;
-      await fetch('/api/vote/' + id, { method: 'POST' });
-      addVoted(id);
-      loadVoteList();
+    box.querySelectorAll('.like-btn:not(:disabled)').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        btn.disabled = true;
+        btn.textContent = '❤️ Liké';
+        
+        await fetch(`${API_BASE}/api/vote/${id}`, { method: 'POST' });
+        addVoted(id);
+        loadVoteList();
+      });
     });
-  });
+  } catch(err) {
+    console.error("Erreur de synchronisation :", err);
+  }
 }
 
 loadVoteList();
-setInterval(loadVoteList, 4000);
+setInterval(loadVoteList, 3000);
 </script>
 </body>
 </html>
