@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Demande un titre</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght=500;700&family=JetBrains+Mono:wght=500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#f5f3ec;
@@ -45,7 +45,7 @@
   .mono{font-family:'JetBrains Mono',monospace;}
 
   .head{
-    padding:34px 20px 18px;
+    padding:40px 20px 18px;
     text-align:center;
     border-bottom:1px dashed var(--torn);
     position:relative;
@@ -63,6 +63,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
+    z-index:80;
   }
   .eyebrow{
     font-family:'Zapfino','Brush Script MT',cursive;
@@ -265,11 +266,10 @@
     border-radius:14px 14px 0 0;
     width:100%; max-width:560px; height:88vh;
     display:flex; flex-direction:column; overflow:hidden;
-    /* Animation de départ : en bas */
     transform: translateY(100%);
     transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  .modal-overlay.open .modal-panel { transform: translateY(0); } /* Animation d'ouverture : remonte */
+  .modal-overlay.open .modal-panel { transform: translateY(0); }
 
   .modal-header{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--paper-line); }
   .modal-header .t{font-size:15px; font-weight:700; text-transform:uppercase;}
@@ -277,23 +277,23 @@
   .modal-body{flex:1; position:relative; background:var(--bg);}
   .modal-body iframe{width:100%; height:100%; border:none;}
 
-  /* --- MENU DE NAVIGATION RAPIDE --- */
+  /* --- MENU FLOTTANT DE SECTIONS (HAUT GAUCHE, ICONE ☰) --- */
   .nav-menu-container {
-    position: fixed; bottom: 20px; right: 20px; z-index: 90;
+    position: fixed; top: 20px; left: 20px; z-index: 90;
   }
   .menu-toggle-btn {
     background: var(--accent); color: var(--accent-ink); border: none;
-    width: 52px; height: 52px; border-radius: 50%;
-    font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 11px;
-    text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    display: flex; align-items: center; justify-content: center; letter-spacing: 0.5px;
+    width: 42px; height: 42px; border-radius: 50%;
+    font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
   }
   .menu-dropdown {
-    position: absolute; bottom: 62px; right: 0;
+    position: absolute; top: 52px; left: 0;
     background: var(--paper); border: 1px solid var(--paper-line);
     border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 4px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15); min-width: 170px;
-    opacity: 0; transform: translateY(15px); pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15); min-width: 175px;
+    opacity: 0; transform: translateY(-15px); pointer-events: none;
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
   .menu-dropdown.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
@@ -310,12 +310,12 @@
 <div class="head">
   <button class="theme-toggle" id="theme-toggle">☾</button>
   <div class="eyebrow">Bon de demande</div>
-  <h1>Demande un titre[cite: 1]</h1>
+  <h1>Demande un titre</h1>
 </div>
 
-<!-- MENU RAPIDE FLOTTANT -->
+<!-- MENU EN HAUT À GAUCHE AVEC LES TROIS BARRES HORIZONTALES -->
 <div class="nav-menu-container">
-  <button class="menu-toggle-btn" id="menu-main-btn">Menu</button>
+  <button class="menu-toggle-btn" id="menu-main-btn">☰</button>
   <div class="menu-dropdown" id="menu-box">
     <a href="#sec-cagnotte" class="menu-link">Soutenir le DJ</a>
     <a href="#sec-musique" class="menu-link">Proposer un titre</a>
@@ -328,10 +328,10 @@
 <div class="wrap">
   <!-- Section Cagnotte -->
   <div class="hero" id="sec-cagnotte">
-    <div class="eyebrow">Coup de pouce[cite: 1]</div>
-    <h2>Soutiens le DJ[cite: 1]</h2>
-    <p>Cette soirée n'a pas de prix, mais les prochaines platines si 🎧<br>Chaque petit geste aide.[cite: 1]</p>
-    <button class="hero-btn" id="cagnotte-fab">Voir la cagnotte[cite: 1]</button>
+    <div class="eyebrow">Coup de pouce</div>
+    <h2>Soutiens le DJ</h2>
+    <p>Cette soirée n'a pas de prix, mais les prochaines platines si 🎧<br>Chaque petit geste aide.</p>
+    <button class="hero-btn" id="cagnotte-fab">Voir la cagnotte</button>
   </div>
 
   <!-- Section Musique -->
@@ -339,14 +339,14 @@
     <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Choix musical</div>
     <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:12px; font-weight:400;">Proposer un morceau</h2>
     <div class="field">
-      <label>Titre du morceau[cite: 1]</label>
-      <input id="f-title" type="text" placeholder="ex: One More Time[cite: 1]">
+      <label>Titre du morceau</label>
+      <input id="f-title" type="text" placeholder="ex: One More Time">
     </div>
     <div class="field">
-      <label>Artiste[cite: 1]</label>
-      <input id="f-artist" type="text" placeholder="ex: Daft Punk[cite: 1]">
+      <label>Artiste</label>
+      <input id="f-artist" type="text" placeholder="ex: Daft Punk">
     </div>
-    <button class="submit" id="submit-btn">Envoyer au DJ[cite: 1]</button>
+    <button class="submit" id="submit-btn">Envoyer au DJ</button>
   </div>
 
   <!-- Section Message -->
@@ -376,7 +376,7 @@
 
   <!-- Footer Propre -->
   <div style="text-align: center; padding: 40px 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-dim); opacity: 0.6;">
-    1.2.0
+    1.2.1
   </div>
 </div>
 
@@ -384,33 +384,33 @@
 <div class="modal-overlay" id="cagnotte-modal">
   <div class="modal-panel">
     <div class="modal-header">
-      <div class="t">Cagnotte — ma prochaine platine[cite: 1]</div>
+      <div class="t">Cagnotte — ma prochaine platine</div>
       <button class="modal-close" id="modal-close">✕</button>
     </div>
     <div class="modal-body">
-      <iframe id="cagnotte-iframe" src="" title="Cagnotte[cite: 1]"></iframe>
+      <iframe id="cagnotte-iframe" src="" title="Cagnotte"></iframe>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast">Demande envoyée[cite: 1]</div>
+<div class="toast" id="toast">Demande envoyée</div>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const CAGNOTTE_URL = 'https://www.lepotcommun.fr/cagnotte/festive/ma-prochaine-platine-kc35w9qk?_se=YXVndXN0aW4uZmxvcXVldEBpY2xvdWQuY29t';[cite: 1]
+const CAGNOTTE_URL = 'https://www.lepotcommun.fr/cagnotte/festive/ma-prochaine-platine-kc35w9qk?_se=YXVndXN0aW4uZmxvcXVldEBpY2xvdWQuY29t';
 
-// Thème
+// Gestion du Thème sombre/lumineux
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('floor_theme', t);
-  $('theme-toggle').textContent = t === 'dark' ? '☀' : '☾';[cite: 1]
+  $('theme-toggle').textContent = t === 'dark' ? '☀' : '☾';
 }
-applyTheme(localStorage.getItem('floor_theme') || 'light');[cite: 1]
+applyTheme(localStorage.getItem('floor_theme') || 'light');
 $('theme-toggle').addEventListener('click', () => {
-  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');[cite: 1]
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 });
 
-// Gestion du Menu Rapide
+// Gestion du Menu Rapide ☰
 $('menu-main-btn').addEventListener('click', (e) => {
   e.stopPropagation();
   $('menu-box').classList.toggle('active');
@@ -420,39 +420,39 @@ document.querySelectorAll('.menu-link').forEach(link => {
 });
 document.addEventListener('click', () => $('menu-box').classList.remove('active'));
 
-// Cagnotte (Animations d'ouverture/fermeture via classes CSS)
+// Cagnotte (Animations fluides)
 $('cagnotte-fab').addEventListener('click', () => {
-  $('cagnotte-iframe').src = CAGNOTTE_URL;[cite: 1]
+  $('cagnotte-iframe').src = CAGNOTTE_URL;
   $('cagnotte-modal').classList.add('open');
 });
 $('modal-close').addEventListener('click', () => {
   $('cagnotte-modal').classList.remove('open');
-  setTimeout(() => { $('cagnotte-iframe').src = ''; }, 400); // Attend la fin de l'anim de descente
+  setTimeout(() => { $('cagnotte-iframe').src = ''; }, 400);
 });
 
-const VOTED_KEY = 'floor_request_voted_ids';[cite: 1]
-function getVoted(){ try { return JSON.parse(localStorage.getItem(VOTED_KEY) || '[]'); } catch(e){ return []; } }[cite: 1]
-function addVoted(id){ const v = getVoted(); v.push(id); localStorage.setItem(VOTED_KEY, JSON.stringify(v)); }[cite: 1]
-function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }[cite: 1]
+const VOTED_KEY = 'floor_request_voted_ids';
+function getVoted(){ try { return JSON.parse(localStorage.getItem(VOTED_KEY) || '[]'); } catch(e){ return []; } }
+function addVoted(id){ const v = getVoted(); v.push(id); localStorage.setItem(VOTED_KEY, JSON.stringify(v)); }
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
 function showToast(msg){
-  const t = $('toast'); t.textContent = msg; t.classList.add('show');[cite: 1]
-  setTimeout(() => t.classList.remove('show'), 2200);[cite: 1]
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// Envoi Titre
+// Envoi Titre Musique (Démarre bien à 0 vote côté serveur)
 $('submit-btn').addEventListener('click', async () => {
-  const title = $('f-title').value.trim();[cite: 1]
-  const artist = $('f-artist').value.trim();[cite: 1]
+  const title = $('f-title').value.trim();
+  const artist = $('f-artist').value.trim();
   if(!title) return;
   await fetch('/api/requests', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, artist }),
   });
-  $('f-title').value = ''; $('f-artist').value = '';[cite: 1]
-  showToast('Demande envoyée');[cite: 1]
-  loadVoteList();[cite: 1]
+  $('f-title').value = ''; $('f-artist').value = '';
+  showToast('Demande envoyée');
+  loadVoteList();
 });
 
 // Envoi Message
@@ -469,47 +469,47 @@ $('submit-msg-btn').addEventListener('click', async () => {
   showToast('Message transmis au DJ');
 });
 
-// Charger la playlist triée
+// Charger la playlist
 async function loadVoteList(){
   try {
-    const res = await fetch('/api/requests');[cite: 1]
-    const data = await res.json();[cite: 1]
-    const voted = getVoted();[cite: 1]
-    const box = $('vote-list');[cite: 1]
+    const res = await fetch('/api/requests');
+    const data = await res.json();
+    const voted = getVoted();
+    const box = $('vote-list');
 
     if(!data.requests || data.requests.length === 0){
-      box.innerHTML = '<div class="empty">Aucune demande pour l\'instant — sois le premier</div>';[cite: 1]
+      box.innerHTML = '<div class="empty">Aucune demande pour l\'instant — sois le premier</div>';
       return;
     }
 
     box.innerHTML = data.requests.map((r) => {
-      const already = voted.includes(r.id);[cite: 1]
+      const already = voted.includes(r.id);
       return `
         <div class="ticket">
           <div class="ticket-num mono">${String(r.votes).padStart(2,'0')}</div>
           <div class="ticket-body">
             <div class="ticket-meta">
-              <div class="t">${escapeHtml(r.title)}</div>[cite: 1]
-              <div class="a">${r.artist ? escapeHtml(r.artist) : 'artiste non precise'}</div>[cite: 1]
+              <div class="t">${escapeHtml(r.title)}</div>
+              <div class="a">${r.artist ? escapeHtml(r.artist) : 'Artiste non spécifié'}</div>
             </div>
-            <button class="vote-btn" data-title="${escapeHtml(r.title)}" data-artist="${escapeHtml(r.artist)}" data-id="${r.id}" ${already ? 'disabled' : ''}>${already ? 'Voté' : 'Voter'}</button>[cite: 1]
+            <button class="vote-btn" data-title="${escapeHtml(r.title)}" data-artist="${escapeHtml(r.artist)}" data-id="${r.id}" ${already ? 'disabled' : ''}>${already ? 'Voté' : 'Voter'}</button>
           </div>
         </div>
       `;
     }).join('');
 
-    box.querySelectorAll('.vote-btn:not(:disabled)').forEach((btn) => {[cite: 1]
+    box.querySelectorAll('.vote-btn:not(:disabled)').forEach((btn) => {
       btn.addEventListener('click', async () => {
-        const id = btn.dataset.id;[cite: 1]
-        btn.disabled = true;[cite: 1]
+        const id = btn.dataset.id;
+        btn.disabled = true;
         await fetch('/api/requests', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: btn.dataset.title, artist: btn.dataset.artist })
         });
-        addVoted(id);[cite: 1]
+        addVoted(id);
         showToast('Vote enregistré');
-        loadVoteList();[cite: 1]
+        loadVoteList();
       });
     });
   } catch(e){}
@@ -537,9 +537,9 @@ async function loadCalendar() {
   } catch(e) {}
 }
 
-setInterval(loadVoteList, 3000);[cite: 1]
+setInterval(loadVoteList, 3000);
 setInterval(loadCalendar, 5000);
-loadVoteList();[cite: 1]
+loadVoteList();
 loadCalendar();
 </script>
 </body>
