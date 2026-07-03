@@ -93,3 +93,128 @@
   </div>
 
   <div class="wrap">
+    <div class="display">
+      <div>
+        <div class="lbl">Top demande</div>
+        <div class="top-title" id="top-title">—</div>
+      </div>
+      <div class="count mono" id="top-count">00<span>votes</span></div>
+    </div>
+
+    <div class="qr-box">
+      <img id="qr-img" alt="QR code">
+      <div>
+        <div class="lbl">A scanner sur le dancefloor</div>
+        <div class="url" id="qr-url">chargement...</div>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <div class="section-title">Classement</div>
+        <div id="leaderboard"></div>
+      </div>
+      <div>
+        <div class="section-title">
+          File d'attente
+          <button id="clear-btn">Tout effacer</button>
+        </div>
+        <div id="queue"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chargement stable de Socket.io via CDN pour éviter les bugs sur Render -->
+<script src="https://cdn.socketio.org/4.7.5/socket-io.min.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function timeAgo(ts){
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if(s < 60) return 'a l\'instant';
+  const m = Math.floor(s/60);
+  if(m < 60) return m + ' min';
+  return Math.floor(m/60) + ' h';
+}
+
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('floor_theme', t);
+  $('theme-toggle').textContent = t === 'dark' ? '☀' : '☾';
+}
+applyTheme(localStorage.getItem('floor_theme') || 'light');
+$('theme-toggle').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+// Force la connexion sur l'adresse courante du site Render
+const socket = io(window.location.origin);
+
+socket.on('connect', () => {
+  socket.emit('dj:join');
+  loadQr();
+});
+
+async function loadQr(){
+  const res = await fetch('/api/qrcode');
+  const data = await res.json();
+  $('qr-img').src = data.dataUrl;
+  $('qr-url').textContent = data.url;
+}
+
+function render(state){
+  const { requests, leaderboard } = state;
+
+  if(leaderboard.length > 0){
+    $('top-title').textContent = leaderboard[0].title;
+    $('top-count').innerHTML = String(leaderboard[0].votes).padStart(2,'0') + '<span>votes</span>';
+  } else {
+    $('top-title').textContent = 'En attente...';
+    $('top-count').innerHTML = '00<span>votes</span>';
+  }
+
+  const lb = $('leaderboard');
+  lb.innerHTML = leaderboard.length === 0
+    ? '<div class="empty">Aucune demande pour l\'instant</div>'
+    : leaderboard.map((t,i) => `
+        <div class="ticket ${i===0 ? 'r1' : ''}">
+          <div class="ticket-num mono">${String(t.votes).padStart(2,'0')}</div>
+          <div class="ticket-body">
+            <div class="ticket-meta">
+              <div class="t">${escapeHtml(t.title)}</div>
+              <div class="a">${escapeHtml(t.artist || 'artiste non precise')}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+  const q = $('queue');
+  q.innerHTML = requests.length === 0
+    ? '<div class="empty">File vide</div>'
+    : requests.map((r) => `
+        <div class="ticket">
+          <div class="ticket-num mono">${String(r.votes).padStart(2,'0')}</div>
+          <div class="ticket-body">
+            <div class="ticket-meta">
+              <div class="t">${escapeHtml(r.title)}</div>
+              <div class="a">${escapeHtml(r.artist || 'artiste non precise')} · ${timeAgo(r.ts)}</div>
+            </div>
+            <button class="done-btn" data-id="${r.id}" title="Marquer comme joue">✓</button>
+          </div>
+        </div>
+      `).join('');
+  q.querySelectorAll('.done-btn').forEach((btn) => {
+    btn.addEventListener('click', () => socket.emit('dj:done', { id: btn.dataset.id }));
+  });
+}
+
+socket.on('state', render);
+
+$('clear-btn').addEventListener('click', () => {
+  if(confirm('Effacer toute la file de demandes ?')) socket.emit('dj:clear');
+});
+</script>
+</body>
+</html>
