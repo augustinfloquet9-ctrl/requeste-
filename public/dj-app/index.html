@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floor Request — DJ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5f3ec;
+    --paper:#ffffff;
+    --paper-line:#e2ded0;
+    --ink:#0a0a0a;
+    --ink-dim:#6b6b75;
+    --accent:#2f6fed;
+    --accent-ink:#ffffff;
+    --eyebrow:#4fa3d8;
+    --torn:#d8d4c4;
+  }
+  :root[data-theme="dark"]{
+    --bg:#14151c;
+    --paper:#1c1e28;
+    --paper-line:#2c2f3d;
+    --ink:#ffffff;
+    --ink-dim:#8b8ea0;
+    --accent:#5b8def;
+    --accent-ink:#0c1220;
+    --eyebrow:#3b6ea5;
+    --torn:#3a3d4d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:'Oswald',-apple-system,sans-serif;min-height:100vh;padding-bottom:60px;transition:background .2s ease, color .2s ease;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+
+  .login{max-width:320px;margin:90px auto;text-align:center;}
+  .login h1{font-size:22px;text-transform:uppercase;font-weight:700;margin-bottom:18px;}
+  .login input{width:100%;background:var(--paper);border:1px solid var(--paper-line);border-radius:3px;color:var(--ink);font-family:'Oswald',sans-serif;font-size:15px;padding:12px;outline:none;margin-bottom:10px;}
+  .login button{width:100%;background:var(--accent);color:var(--accent-ink);border:none;border-radius:3px;padding:12px;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;}
+  .login .err{font-family:'JetBrains Mono',monospace;color:var(--accent);font-size:11px;margin-top:8px;display:none;}
+
+  .head{padding:28px 20px 16px;text-align:center;border-bottom:1px dashed var(--torn);position:relative;}
+  .theme-toggle{
+    position:absolute; top:20px; right:20px;
+    background:var(--paper); border:1px solid var(--paper-line); color:var(--ink);
+    width:36px; height:36px; border-radius:50%; font-size:15px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .head .eyebrow{font-family:'Zapfino','Brush Script MT',cursive;font-size:18px;color:var(--eyebrow);font-weight:400;}
+  .head h1{font-family:'Impact','Haettenschweiler','Arial Narrow Bold',sans-serif;font-size:30px;text-transform:uppercase;letter-spacing:.02em;margin-top:8px;color:var(--ink);font-weight:400;}
+
+  .display{
+    margin:24px 0;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    padding:18px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+  .display .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim);}
+  .display .top-title{font-size:20px;font-weight:700;margin-top:4px;}
+  .display .count{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:var(--accent);flex-shrink:0;}
+  .display .count span{font-size:12px;color:var(--ink-dim);font-weight:500;display:block;text-align:right;}
+
+  .qr-box{display:flex;align-items:center;gap:16px;background:var(--paper);border:1px solid var(--paper-line);border-radius:4px;padding:16px;margin-bottom:24px;}
+  .qr-box img{width:92px;height:92px;border-radius:3px;background:#fff;padding:6px;}
+  .qr-box .url{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-dim);word-break:break-all;}
+  .qr-box .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:4px;}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:26px;}
+  @media (max-width:720px){.cols{grid-template-columns:1fr;}}
+
+  .section-title{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim);font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+  .section-title button{background:none;border:1px solid var(--paper-line);color:var(--ink-dim);border-radius:3px;padding:3px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;}
+
+  .ticket{display:flex;align-items:stretch;background:var(--paper);border:1px solid var(--paper-line);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+  .ticket.r1{border-color:var(--accent);}
+  .ticket-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px;color:var(--accent);background:var(--bg);width:50px;display:flex;align-items:center;justify-content:center;border-right:1px dashed var(--torn);flex-shrink:0;}
+  .ticket-body{flex:1;min-width:0;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .ticket-meta{min-width:0;}
+  .ticket-meta .t{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ticket-meta .a{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .done-btn{flex-shrink:0;background:transparent;border:1px solid var(--paper-line);color:var(--ink-dim);border-radius:3px;width:30px;height:30px;font-size:15px;cursor:pointer;}
+
+  .empty{font-family:'JetBrains Mono',monospace;color:var(--ink-dim);font-size:12px;text-align:center;padding:20px 0;}
+</style>
+</head>
+<body>
+
+<div id="login" class="login">
+  <h1>Connexion DJ</h1>
+  <input id="pwd" type="password" placeholder="Mot de passe">
+  <button id="login-btn">Entrer</button>
+  <div class="err" id="login-err">Mot de passe incorrect</div>
+</div>
+
+<div id="dashboard" style="display:none;">
+  <div class="head">
+    <button class="theme-toggle" id="theme-toggle">☾</button>
+    <div class="eyebrow">Ce soir</div>
+    <h1>Dashboard DJ</h1>
+  </div>
+
+  <div class="wrap">
+    <div class="display">
+      <div>
+        <div class="lbl">Top demande</div>
+        <div class="top-title" id="top-title">—</div>
+      </div>
+      <div class="count mono" id="top-count">00<span>votes</span></div>
+    </div>
+
+    <div class="qr-box">
+      <img id="qr-img" alt="QR code">
+      <div>
+        <div class="lbl">A scanner sur le dancefloor</div>
+        <div class="url" id="qr-url">chargement...</div>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <div class="section-title">Classement</div>
+        <div id="leaderboard"></div>
+      </div>
+      <div>
+        <div class="section-title">
+          File d'attente
+          <button id="clear-btn">Tout effacer</button>
+        </div>
+        <div id="queue"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function timeAgo(ts){
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if(s < 60) return 'a l\'instant';
+  const m = Math.floor(s/60);
+  if(m < 60) return m + ' min';
+  return Math.floor(m/60) + ' h';
+}
+
+// ---- Theme ----
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('floor_theme', t);
+  $('theme-toggle').textContent = t === 'dark' ? '☀' : '☾';
+}
+applyTheme(localStorage.getItem('floor_theme') || 'light');
+$('theme-toggle').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+const socket = io();
+
+async function loadQr(){
+  const res = await fetch('/api/qrcode');
+  const data = await res.json();
+  $('qr-img').src = data.dataUrl;
+  $('qr-url').textContent = data.url;
+}
+
+function render(state){
+  const { requests, leaderboard } = state;
+
+  if(leaderboard.length > 0){
+    $('top-title').textContent = leaderboard[0].title;
+    $('top-count').innerHTML = String(leaderboard[0].votes).padStart(2,'0') + '<span>votes</span>';
+  } else {
+    $('top-title').textContent = 'En attente...';
+    $('top-count').innerHTML = '00<span>votes</span>';
+  }
+
+  const lb = $('leaderboard');
+  lb.innerHTML = leaderboard.length === 0
+    ? '<div class="empty">Aucune demande pour l\'instant</div>'
+    : leaderboard.map((t,i) => `
+        <div class="ticket ${i===0 ? 'r1' : ''}">
+          <div class="ticket-num mono">${String(t.votes).padStart(2,'0')}</div>
+          <div class="ticket-body">
+            <div class="ticket-meta">
+              <div class="t">${escapeHtml(t.title)}</div>
+              <div class="a">${escapeHtml(t.artist || 'artiste non precise')}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+  const q = $('queue');
+  q.innerHTML = requests.length === 0
+    ? '<div class="empty">File vide</div>'
+    : requests.map((r) => `
+        <div class="ticket">
+          <div class="ticket-num mono">${String(r.votes).padStart(2,'0')}</div>
+          <div class="ticket-body">
+            <div class="ticket-meta">
+              <div class="t">${escapeHtml(r.title)}</div>
+              <div class="a">${escapeHtml(r.artist || 'artiste non precise')} · ${timeAgo(r.ts)}</div>
+            </div>
+            <button class="done-btn" data-id="${r.id}" title="Marquer comme joue">✓</button>
+          </div>
+        </div>
+      `).join('');
+  q.querySelectorAll('.done-btn').forEach((btn) => {
+    btn.addEventListener('click', () => socket.emit('dj:done', { id: btn.dataset.id }));
+  });
+}
+
+socket.on('state', render);
+socket.on('dj:unauthorized', () => {
+  $('login-err').style.display = 'block';
+  $('dashboard').style.display = 'none';
+  $('login').style.display = 'block';
+});
+
+$('clear-btn').addEventListener('click', () => {
+  if(confirm('Effacer toute la file de demandes ?')) socket.emit('dj:clear');
+});
+
+$('login-btn').addEventListener('click', login);
+$('pwd').addEventListener('keydown', (e) => { if(e.key === 'Enter') login(); });
+
+function login(){
+  const password = $('pwd').value;
+  socket.emit('dj:join', { password });
+  $('login').style.display = 'none';
+  $('dashboard').style.display = 'block';
+  loadQr();
+}
+</script>
+</body>
+</html>
