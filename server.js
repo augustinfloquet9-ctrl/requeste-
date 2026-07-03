@@ -16,7 +16,7 @@ const io = new Server(server);
 
 app.use(express.json());
 
-// Désactive la page d'avertissement de Ngrok pour le public
+// Désactive la page d'avertissement de Ngrok (au cas où tu le relances en local)
 app.use((req, res, next) => {
   res.setHeader('ngrok-skip-browser-warning', 'true');
   next();
@@ -24,6 +24,11 @@ app.use((req, res, next) => {
 
 app.use('/public-app', express.static(path.join(__dirname, 'public/public-app')));
 app.use('/dj-app', express.static(path.join(__dirname, 'public/dj-app')));
+
+// Redirection automatique de la racine vers l'application publique
+app.get('/', (req, res) => {
+  res.redirect('/public-app/');
+});
 
 // --- Etat en memoire (file de demandes de la soiree) ---
 let requests = []; // { id, title, artist, ts, votes }
@@ -98,11 +103,13 @@ app.post('/api/vote/:id', (req, res) => {
   }
 });
 
-// Générer le QR Code (pour la vue DJ)
+// Générer le QR Code
 app.get('/api/qrcode', async (req, res) => {
   try {
-    const ip = getLocalIp();
-    const url = `http://${ip}:${PORT}/public-app/`;
+    const host = req.get('host');
+    // Utilise l'adresse du vrai site sur Render de manière dynamique !
+    const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+    const url = `${protocol}://${host}/public-app/`;
     const dataUrl = await QRCode.toDataURL(url, { margin: 2, scale: 6 });
     res.json({ url, dataUrl });
   } catch (err) {
@@ -135,27 +142,9 @@ io.on('connection', (socket) => {
   });
 });
 
-function getLocalIp() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        return iface.address;
-      }
-    }
-  }
-  return 'localhost';
-}
-
-server.listen(PORT, () => {
-  const ip = getLocalIp();
+// Liaison sur le port et l'hôte requis par Render (0.0.0.0)
+server.listen(PORT, '0.0.0.0', () => {
   console.log('');
-  console.log('  Floor Request est lance');
-  console.log('  ------------------------');
-  console.log(`  App publique (a scanner)  : http://${ip}:${PORT}/public-app/`);
-  console.log(`  Dashboard DJ (sur ton PC) : http://localhost:${PORT}/dj-app/`);
+  console.log(`  Floor Request est maintenant en ligne sur le port ${PORT} !`);
   console.log('');
-  console.log('  Assure-toi que ton telephone est sur le meme reseau WiFi que cet ordinateur.');
-  console.log('  Sur Mac, la premiere fois, autorise Node a accepter les connexions entrantes');
-  console.log('  si macOS te le demande (Reglages Systeme > Confidentialite et securite > Pare-feu).');
 });
