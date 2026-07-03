@@ -249,7 +249,7 @@
   }
   .toast.show{transform:translateX(-50%) translateY(0);}
 
-  /* --- MODALE CAGNOTTE ANIMÉE (BAS -> HAUT) --- */
+  /* --- Modale Cagnotte --- */
   .modal-overlay{
     position:fixed; inset:0;
     background:var(--overlay);
@@ -277,32 +277,68 @@
   .modal-body{flex:1; position:relative; background:var(--bg);}
   .modal-body iframe{width:100%; height:100%; border:none;}
 
-  /* --- NOUVEAU MENU PLEIN ÉCRAN (HAUT GAUCHE, ICONE ☰) --- */
+  /* --- NAVIGATION & EFFET LIQUID GLASS --- */
   .nav-menu-container {
     position: fixed; top: 20px; left: 20px; z-index: 170;
   }
   .menu-toggle-btn {
-    background: var(--accent); color: var(--accent-ink); border: none;
+    background: rgba(47, 111, 237, 0.15); 
+    color: var(--accent); 
+    border: 1px solid rgba(47, 111, 237, 0.25);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
     width: 44px; height: 44px; border-radius: 50%;
-    font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-size: 24px; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     display: flex; align-items: center; justify-content: center;
-    line-height: 1; transition: background 0.2s;
+    line-height: 1; transition: background 0.2s, transform 0.2s;
   }
+  :root[data-theme="dark"] .menu-toggle-btn {
+    background: rgba(91, 141, 239, 0.18);
+    border: 1px solid rgba(91, 141, 239, 0.3);
+    color: var(--accent);
+  }
+  .menu-toggle-btn:hover {
+    background: rgba(47, 111, 237, 0.3);
+  }
+  
+  /* ANIMATION RALENTIE ET ASSOUPLIE (0.65s) */
   .menu-dropdown {
     position: fixed; inset: 0;
     background: var(--paper); display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 24px;
+    align-items: center; justify-content: center; gap: 20px;
     z-index: 160; opacity: 0; pointer-events: none;
     transform: translateY(-100%);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease;
   }
   .menu-dropdown.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .menu-dropdown a {
     color: var(--ink); text-decoration: none; font-family: 'Oswald', sans-serif;
-    text-transform: uppercase; font-size: 26px; padding: 10px 20px; letter-spacing: 0.04em;
+    text-transform: uppercase; font-size: 26px; padding: 8px 20px; letter-spacing: 0.04em;
     transition: color 0.2s; display: block; text-align: center;
   }
   .menu-dropdown a:hover { color: var(--accent); }
+
+  /* Bouton Explicite Sortie de Menu */
+  .menu-close-explicit {
+    margin-top: 15px;
+    background: transparent;
+    border: 1px dashed var(--ink-dim);
+    color: var(--ink-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.2s ease;
+  }
+  .menu-close-explicit:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 </style>
 </head>
 <body>
@@ -313,18 +349,23 @@
   <h1>Demande un titre</h1>
 </div>
 
+<!-- LE BOUTON MENU GLASSMORPHIC -->
 <div class="nav-menu-container">
   <button class="menu-toggle-btn" id="menu-main-btn">☰</button>
+  <!-- MENU PLEIN ÉCRAN ACCÉLÉRATION LISSÉE -->
   <div class="menu-dropdown" id="menu-box">
     <a href="#sec-musique" class="menu-link">Proposer une musique</a>
     <a href="#sec-attente" class="menu-link">File d'attente</a>
     <a href="#sec-agenda" class="menu-link">Agenda</a>
     <a href="#sec-message" class="menu-link">Envoyer un message</a>
     <a href="#sec-contact" class="menu-link">Contact</a>
+    <!-- NOUVEAU BOUTON POUR SORTIR DU MENU -->
+    <button class="menu-close-explicit" id="menu-quit-btn">✕ Fermer le menu</button>
   </div>
 </div>
 
 <div class="wrap">
+  <!-- Section Cagnotte -->
   <div class="hero" id="sec-cagnotte">
     <div class="eyebrow">Coup de pouce</div>
     <h2>Soutiens le DJ</h2>
@@ -332,6 +373,7 @@
     <button class="hero-btn" id="cagnotte-fab">Voir la cagnotte</button>
   </div>
 
+  <!-- 1. Section Musique -->
   <div class="ticket-form" id="sec-musique">
     <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Choix musical</div>
     <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:12px; font-weight:400;">Proposer un morceau</h2>
@@ -346,14 +388,17 @@
     <button class="submit" id="submit-btn">Envoyer au DJ</button>
   </div>
 
+  <!-- 2. Section File d'attente -->
   <div class="section-title" id="sec-attente">File d'attente (Par votes)</div>
   <div id="vote-list"></div>
 
+  <!-- 3. Section Agenda -->
   <div class="section-title" id="sec-agenda">Agenda du DJ</div>
   <div id="public-cal-list">
     <div class="empty">Aucune date annoncée pour le moment.</div>
   </div>
 
+  <!-- 4. Section Envoyer un message -->
   <div class="ticket-form" id="sec-message" style="margin-top: 22px;">
     <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Ligne directe</div>
     <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:12px; font-weight:400;">Envoyer un message au DJ</h2>
@@ -368,6 +413,7 @@
     <button class="submit" id="submit-msg-btn" style="background: transparent; border: 2px solid var(--accent); color: var(--accent);">Transmettre le message</button>
   </div>
 
+  <!-- 5. Section Contact -->
   <div class="ticket-form" id="sec-contact" style="margin-top: 22px; text-align: center; padding: 26px 16px;">
     <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Restons connectés</div>
     <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:10px; font-weight:400;">Page Contact</h2>
@@ -375,11 +421,13 @@
     <a href="mailto:augustin.floquet@icloud.com" style="color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; text-decoration: none; border-bottom: 2px dashed var(--accent); padding-bottom: 2px;">augustin.floquet@icloud.com</a>
   </div>
 
+  <!-- Footer -->
   <div style="text-align: center; padding: 40px 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-dim); opacity: 0.6;">
-    1.3.0
+    1.3.1
   </div>
 </div>
 
+<!-- Modale Cagnotte -->
 <div class="modal-overlay" id="cagnotte-modal">
   <div class="modal-panel">
     <div class="modal-header">
@@ -398,7 +446,6 @@
 const $ = (id) => document.getElementById(id);
 const CAGNOTTE_URL = 'https://www.lepotcommun.fr/cagnotte/festive/ma-prochaine-platine-kc35w9qk?_se=YXVndXN0aW4uZmxvcXVldEBpY2xvdWQuY29t';
 
-// Gestion Thème
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('floor_theme', t);
@@ -409,17 +456,21 @@ $('theme-toggle').addEventListener('click', () => {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 });
 
-// Gestion du Menu Plein Écran Toggling (☰ <-> ✕)
+// Logique d'ouverture/fermeture du menu
+function closeMenu() {
+  $('menu-box').classList.remove('active');
+  $('menu-main-btn').textContent = '☰';
+}
 $('menu-main-btn').addEventListener('click', (e) => {
   e.stopPropagation();
   const isActive = $('menu-box').classList.toggle('active');
   $('menu-main-btn').textContent = isActive ? '✕' : '☰';
 });
+// Fermeture via le nouveau bouton de sortie dédié
+$('menu-quit-btn').addEventListener('click', closeMenu);
+// Fermeture en cliquant sur un lien
 document.querySelectorAll('.menu-link').forEach(link => {
-  link.addEventListener('click', () => {
-    $('menu-box').classList.remove('active');
-    $('menu-main-btn').textContent = '☰';
-  });
+  link.addEventListener('click', closeMenu);
 });
 
 // Cagnotte animations
