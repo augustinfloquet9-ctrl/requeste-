@@ -1,103 +1,121 @@
-require('dotenv').config();
 const express = require('express');
-const QRCode = require('qrcode');
-const crypto = require('crypto');
 const path = require('path');
-
-const PORT = process.env.PORT || 3000;
 const app = express();
+const PORT = process.env.PORT || 10000;
 
+// Middleware pour analyser les requêtes JSON envoyées par les applications
 app.use(express.json());
 
-// Servir les dossiers de l'application
+// Sécurité des dossiers : On sert les fichiers statiques pour toutes les architectures possibles
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/public-app', express.static(path.join(__dirname, 'public/public-app')));
 app.use('/dj-app', express.static(path.join(__dirname, 'public/dj-app')));
+app.use('/public-app', express.static(path.join(__dirname, 'public-app')));
+app.use('/dj-app', express.static(path.join(__dirname, 'dj-app')));
 
-// Redirection automatique vers l'app publique
-app.get('/', (req, res) => {
-  res.redirect('/public-app/');
-});
+// --- BASE DE DONNÉES EN MÉMOIRE ---
+let requests = [];      // Liste des musiques demandées
+let messages = [];      // Liste des messages envoyés au DJ
+let upcomingDates = []; // Liste des dates du calendrier
 
-// --- État des demandes en mémoire ---
-let requests = [];
+// --- 🎵 API SYSTEME DE MUSIQUE ---
 
-function normalize(s) {
-  return (s || '').toLowerCase().trim();
-}
-
-// --- API HTTP POUR L'APP PUBLIQUE ---
-
-// Récupérer la liste des musiques
+// 1. Récupérer les musiques (triées automatiquement par votes)
 app.get('/api/requests', (req, res) => {
-  res.json({ requests: [...requests].sort((a, b) => b.votes - a.votes) });
+    const sortedRequests = [...requests].sort((a, b) => b.votes - a.votes);
+    res.json({ requests: sortedRequests });
 });
 
-// Ajouter une musique ou voter si elle existe déjà
-app.post('/api/request', (req, res) => {
-  const { title, artist } = req.body;
-  if (!title || title.trim() === '') {
-    return res.status(400).json({ error: 'Titre requis' });
-  }
+// 2. Ajouter une musique (avec système de vote si doublon)
+app.post('/api/requests', (req, res) => {
+    const { title, artist } = req.body;
+    if (!title) return res.status(400).json({ error: "Titre manquant" });
 
-  const existing = requests.find(
-    (r) => normalize(r.title) === normalize(title) && normalize(r.artist) === normalize(artist)
-  );
+    // Si la musique existe déjà (même titre et même artiste), on ajoute +1 vote
+    const duplicate = requests.find(r => 
+        r.title.toLowerCase().trim() === title.toLowerCase().trim() &&
+        (r.artist || '').toLowerCase().trim() === (artist || '').toLowerCase().trim()
+    );
 
-  if (existing) {
-    existing.votes += 1;
-  } else {
-    requests.push({
-      id: crypto.randomUUID(),
-      title: title.trim(),
-      artist: artist ? artist.trim() : '',
-      ts: Date.now(),
-      votes: 1,
-    });
-  }
-  res.json({ success: true });
-});
-
-// Voter pour une musique depuis la liste publique
-app.post('/api/vote/:id', (req, res) => {
-  const reqId = req.params.id;
-  const item = requests.find((r) => r.id === reqId);
-  if (item) {
-    item.votes += 1;
+    if (duplicate) {
+        duplicate.votes += 1;
+    } else {
+        // Sinon, on crée un nouveau morceau avec 1 vote
+        requests.push({
+            id: Date.now().toString(),
+            title: title.trim(),
+            artist: artist ? artist.trim() : 'Artiste non spécifié',
+            votes: 1
+        });
+    }
     res.json({ success: true });
-  } else {
-    res.status(404).json({ error: 'Demande introuvable' });
-  }
 });
 
-// Générer le QR Code
-app.get('/api/qrcode', async (req, res) => {
-  try {
-    const host = req.get('host');
-    const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-    const url = `${protocol}://${host}/public-app/`;
-    const dataUrl = await QRCode.toDataURL(url, { margin: 2, scale: 6 });
-    res.json({ url, dataUrl });
-  } catch (err) {
-    res.status(500).json({ error: 'Erreur QR Code' });
-  }
-});
-
-// --- NOUVELLES API HTTP DÉDIÉES AU DJ (Remplacent les WebSockets) ---
-
-// Supprimer un morceau quand le DJ clique sur "✓"
+// 3. Supprimer un morceau joué (Action du bouton ✓ du DJ)
 app.post('/api/dj/done/:id', (req, res) => {
-  const reqId = req.params.id;
-  requests = requests.filter((r) => r.id !== reqId);
-  res.json({ success: true });
+    const { id } = req.params;
+    requests = requests.filter(r => r.id !== id);
+    res.json({ success: true });
 });
 
-// Tout effacer quand le DJ clique sur "Tout effacer"
+// 4. Tout effacer les musiques (DJ)
 app.post('/api/dj/clear', (req, res) => {
-  requests = [];
-  res.json({ success: true });
+    requests = [];
+    res.json({ success: true });
 });
 
-// Lancement du serveur
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Serveur HTTP connecté sur le port ${PORT}`);
+
+// --- 💬 API SYSTEME DE MESSAGES ---
+
+// 1. Récupérer les messages reçus
+app.get('/api/messages', (req, res) => {
+    res.json({ messages });
+});
+
+// 2. Envoyer un message (Action du Public)
+app.post('/api/messages', (req, res) => {
+    const { text, pseudo } = req.body;
+    if (text) {
+        messages.push({
+            id: Date.now().toString(),
+            text: text.trim(),
+            pseudo: pseudo ? pseudo.trim() : 'Anonyme',
+            time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+        });
+    }
+    res.json({ success: true });
+});
+
+// 3. Tout effacer les messages (DJ)
+app.post('/api/dj/messages/clear', (req, res) => {
+    messages = [];
+    res.json({ success: true });
+});
+
+
+// --- 📅 API SYSTEME DE CALENDRIER ---
+
+// 1. Récupérer les dates programmées
+app.get('/api/dates', (req, res) => {
+    res.json({ dates: upcomingDates });
+});
+
+// 2. Ajouter une date (Action du DJ)
+app.post('/api/dj/dates', (req, res) => {
+    const { date, location } = req.body;
+    if (date && location) {
+        upcomingDates.push({
+            id: Date.now().toString(),
+            date: date.trim(),
+            location: location.trim()
+        });
+    }
+    res.json({ success: true });
+});
+
+
+// --- DEMARRAGE DU SERVEUR ---
+app.listen(PORT, () => {
+    console.log(`Serveur HTTP connecté sur le port ${PORT}`);
+    console.log(`Version de l'application : v1.0`);
 });
