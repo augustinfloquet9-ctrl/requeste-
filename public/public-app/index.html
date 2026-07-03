@@ -277,11 +277,10 @@
   .modal-body{flex:1; position:relative; background:var(--bg);}
   .modal-body iframe{width:100%; height:100%; border:none;}
 
-  /* --- BOUTON DE NAVIGATION UNIFIÉ EN EFFET LIQUID GLASS --- */
-  .nav-menu-container {
-    position: fixed; top: 20px; left: 20px; z-index: 170;
-  }
+  /* --- BOUTON DE NAVIGATION UNIFIÉ EN EFFET LIQUID GLASS (PRIORITÉ Z-INDEX MAX) --- */
   .menu-toggle-btn {
+    position: fixed; top: 20px; left: 20px;
+    z-index: 200; /* Force le bouton à rester au-dessus de TOUT, même du menu blanc */
     background: rgba(47, 111, 237, 0.15); 
     color: var(--accent); 
     border: 1px solid rgba(47, 111, 237, 0.25);
@@ -302,14 +301,15 @@
     background: rgba(47, 111, 237, 0.3);
   }
   
-  /* MENU PLEIN ÉCRAN ANIMÉ CONSERVÉ À 0.65s */
+  /* MENU PLEIN ÉCRAN ANIMÉ CONSERVÉ ET RALENTI À 0.85s POUR UN EFFET PREMIUM --- */
   .menu-dropdown {
     position: fixed; inset: 0;
     background: var(--paper); display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 24px;
-    z-index: 160; opacity: 0; pointer-events: none;
+    z-index: 190; /* Juste en dessous du bouton de contrôle */
+    opacity: 0; pointer-events: none;
     transform: translateY(-100%);
-    transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease;
+    transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.85s ease;
   }
   .menu-dropdown.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .menu-dropdown a {
@@ -328,16 +328,14 @@
   <h1>Demande un titre</h1>
 </div>
 
-<!-- BOUTON UNIQUE DE COMMANDE (RESTE VISIBLE AU MÊME ENDROIT POUR OUVRIR / FERMER) -->
-<div class="nav-menu-container">
-  <button class="menu-toggle-btn" id="menu-main-btn">☰</button>
-  <div class="menu-dropdown" id="menu-box">
-    <a href="#sec-musique" class="menu-link">Proposer une musique</a>
-    <a href="#sec-attente" class="menu-link">File d'attente</a>
-    <a href="#sec-agenda" class="menu-link">Agenda</a>
-    <a href="#sec-message" class="menu-link">Envoyer un message</a>
-    <a href="#sec-contact" class="menu-link">Contact</a>
-  </div>
+<!-- BOUTONS DE NAVIGATION INDÉPENDANTS (RÈGLE LE PROBLÈME DE CALQUES INTERNES) -->
+<button class="menu-toggle-btn" id="menu-main-btn">☰</button>
+<div class="menu-dropdown" id="menu-box">
+  <a href="#sec-musique" class="menu-link">Proposer une musique</a>
+  <a href="#sec-attente" class="menu-link">File d'attente</a>
+  <a href="#sec-agenda" class="menu-link">Agenda</a>
+  <a href="#sec-message" class="menu-link">Envoyer un message</a>
+  <a href="#sec-contact" class="menu-link">Contact</a>
 </div>
 
 <div class="wrap">
@@ -384,7 +382,7 @@
     </div>
     <div class="field">
       <label>Message</label>
-      <input id="f-message" type="text" placeholder="Dispo le 18 ?">
+      <input id="f-message" type="text" placeholder="dispo le 18 juin ?">
     </div>
     <button class="submit" id="submit-msg-btn" style="background: transparent; border: 2px solid var(--accent); color: var(--accent);">Transmettre le message</button>
   </div>
@@ -399,7 +397,7 @@
 
   <!-- Footer -->
   <div style="text-align: center; padding: 40px 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-dim); opacity: 0.6;">
-    1.3.2
+    1.3.3
   </div>
 </div>
 
@@ -432,7 +430,7 @@ $('theme-toggle').addEventListener('click', () => {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 });
 
-// Logique unifiée d'ouverture/fermeture du menu au même endroit
+// Logique globale d'ouverture/fermeture du menu au même endroit
 function closeMenu() {
   $('menu-box').classList.remove('active');
   $('menu-main-btn').textContent = '☰';
