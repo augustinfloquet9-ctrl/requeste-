@@ -1,120 +1,93 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="dark">
+<html lang="fr" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DJ — Demandes en Temps Réel</title>
+<title>Régie DJ — Gestion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0b0c10;
-    --card: #1f2833;
-    --text: #ffffff;
-    --text-dim: #c5a059;
-    --accent: #45f3ff;
-    --danger: #ff4b5c;
-    --border: #2c3540;
+  :root{
+    --bg:#f5f3ec;
+    --paper:#ffffff;
+    --paper-line:#e2ded0;
+    --ink:#0a0a0a;
+    --ink-dim:#6b6b75;
+    --accent:#2f6fed;
+    --eyebrow:#2f6fed;
+    --torn:#d8d4c4;
+    --danger:#d93838;
   }
-  :root[data-theme="light"] {
-    --bg: #f4f6f9;
-    --card: #ffffff;
-    --text: #1a1a1a;
-    --text-dim: #666666;
-    --accent: #0070f3;
-    --danger: #e0245e;
-    --border: #e1e8ed;
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Oswald',sans-serif; padding-bottom:60px;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-  body { background: var(--bg); color: var(--text); padding: 20px; transition: background 0.2s; }
-  .container { max-width: 800px; margin: 0 auto; }
-
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
-  .header h1 { font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-  .controls { display: flex; gap: 12px; }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:750px; margin:0 auto; padding:0 20px;}
   
-  button, input { font-weight: 600; border-radius: 6px; outline: none; }
-  button { cursor: pointer; transition: all 0.1s ease; }
+  .head{ padding:30px 0 15px; border-bottom:1px dashed var(--torn); display:flex; justify-content:space-between; align-items:center;}
+  .head h1{ font-family:'Impact',sans-serif; font-size:36px; text-transform:uppercase; }
   
-  .btn-clear { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 8px 16px; font-size: 13px; }
-  .btn-clear:hover { background: var(--danger); color: #fff; }
-  .btn-theme { background: var(--card); border: 1px solid var(--border); color: var(--text); width: 38px; height: 38px; font-size: 16px; }
+  .eyebrow{ font-family:'Zapfino','Brush Script MT',cursive; font-size:22px; color:var(--eyebrow); }
+  .section-title{ font-family:'Impact',sans-serif; font-size:26px; text-transform:uppercase; margin:30px 0 12px; }
 
-  h2 { font-size: 18px; font-weight: 800; text-transform: uppercase; color: var(--accent); margin: 30px 0 15px 0; letter-spacing: 0.5px; }
+  .btn{ background:var(--paper); border:1px solid var(--paper-line); color:var(--ink); padding:8px 14px; font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; cursor:pointer; border-radius:3px; }
+  .btn-danger{ border-color:var(--danger); color:var(--danger); }
+  .btn-danger:hover{ background:var(--danger); color:#fff; }
 
-  .track-list, .message-list, .cal-list { display: flex; flex-direction: column; gap: 12px; }
-  
-  /* Style des cartes */
-  .track-card, .msg-card, .cal-card { 
-    display: flex; align-items: center; 
-    background: var(--card); border: 1px solid var(--border); 
-    padding: 16px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  }
-  
-  /* Classement : Le premier du classement s'illumine en bleu */
-  .track-card.top-track { border-color: var(--accent); background: linear-gradient(145deg, var(--card), rgba(69, 243, 255, 0.03)); }
-  .track-card.top-track .votes { color: var(--accent); font-size: 32px; }
+  .ticket{ display:flex; align-items:stretch; background:var(--paper); border:1px solid var(--paper-line); border-radius:4px; margin-bottom:10px; overflow:hidden; }
+  .ticket-num{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:22px; color:var(--accent); background:var(--bg); width:60px; display:flex; align-items:center; justify-content:center; border-right:1px dashed var(--torn); }
+  .ticket-body{ flex:1; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .ticket-meta{ min-width:0; flex:1; }
+  .ticket-meta .t{ font-size:18px; font-weight:700; }
+  .ticket-meta .a{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-dim); text-transform:uppercase; }
 
-  .votes { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; min-width: 60px; text-align: center; margin-right: 16px; color: var(--text-dim); }
-  
-  .meta { flex: 1; min-width: 0; padding-right: 15px; }
-  .title { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-  .artist { font-size: 14px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.5px; }
+  .btn-done { background: #238636; color: #fff; border: none; width: 44px; height: 44px; font-size: 18px; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor:pointer; }
+  .btn-done:hover { background: #2ea043; }
 
-  /* Gros bouton DONE vert */
-  .btn-done { background: #238636; color: #fff; border: none; width: 48px; height: 48px; font-size: 20px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
-  .btn-done:hover { background: #2ea043; transform: scale(1.05); }
-  .btn-done:active { transform: scale(0.95); }
+  .msg-time{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim); margin-left:auto; }
 
-  /* Style Messages */
-  .msg-pseudo { font-weight: 800; color: var(--accent); font-size: 14px; text-transform: uppercase; margin-bottom: 2px; }
-  .msg-text { font-size: 16px; color: #fff; }
-  :root[data-theme="light"] .msg-text { color: #1a1a1a; }
-  .msg-time { font-size: 12px; color: var(--text-dim); margin-left: auto; opacity: 0.7; }
+  .cal-inputs{ display:flex; gap:10px; background:var(--paper); padding:15px; border:1px solid var(--paper-line); border-radius:4px; }
+  .cal-inputs input{ flex:1; background:var(--bg); border:1px solid var(--paper-line); padding:10px; font-family:'Oswald',sans-serif; font-size:15px; color:var(--ink); outline:none; border-radius:3px; }
+  .btn-add{ background:var(--accent); color:#fff; border:none; padding:0 20px; font-family:'Oswald',sans-serif; font-weight:700; text-transform:uppercase; cursor:pointer; border-radius:3px; }
 
-  /* Formulaire Calendrier */
-  .cal-inputs { display: flex; gap: 10px; margin-bottom: 12px; }
-  .cal-inputs input { flex: 1; background: var(--card); border: 1px solid var(--border); color: #fff; padding: 12px; font-size: 14px; }
-  :root[data-theme="light"] .cal-inputs input { color: #1a1a1a; }
-  .btn-add-cal { background: var(--accent); color: #0b0c10; border: none; padding: 0 20px; font-weight: bold; }
-
-  .empty { text-align: center; padding: 30px 0; color: var(--text-dim); font-size: 15px; font-style: italic; }
+  .empty{ font-family:'JetBrains Mono',monospace; color:var(--ink-dim); font-size:12px; text-align:center; padding:20px 0; }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <h1>Demandes Titres</h1>
-    <div class="controls">
-      <button class="btn-clear" id="clear-msg-btn" style="border-color: var(--text-dim); color: var(--text-dim);">Vider Messages</button>
-      <button class="btn-clear" id="clear-btn">Tout effacer</button>
-      <button class="btn-theme" id="theme-toggle">☀</button>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="eyebrow">Tableau de bord</div>
+      <h1>Régie DJ</h1>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-danger" id="clear-msg-btn">Vider Messages</button>
+      <button class="btn btn-danger" id="clear-btn">Vider Musiques</button>
     </div>
   </div>
 
-  <h2>🎵 Playlist des Invités (Classée par votes)</h2>
-  <div class="track-list" id="main-list">
-    <div class="empty">Chargement de la playlist...</div>
-  </div>
+  <!-- Musiques -->
+  <div class="section-title">🎵 Playlist des Invités (Classée par votes)</div>
+  <div id="main-list"><div class="empty">Chargement...</div></div>
 
-  <h2>💬 Messages en Direct</h2>
-  <div class="message-list" id="msg-list">
-    <div class="empty">Aucun message pour le moment.</div>
-  </div>
+  <!-- Messages -->
+  <div class="section-title">💬 Messages direct au DJ</div>
+  <div id="msg-list"><div class="empty">Aucun message...</div></div>
 
-  <h2>📅 Ajouter une date au calendrier</h2>
+  <!-- Calendrier -->
+  <div class="section-title">📅 Ajouter une date à l'agenda</div>
   <div class="cal-inputs">
     <input type="text" id="cal-date" placeholder="Ex: Samedi 12 Octobre">
-    <input type="text" id="cal-loc" placeholder="Ex: Club Le Privé, Paris">
-    <button class="btn-add-cal" id="add-cal-btn">Ajouter</button>
+    <input type="text" id="cal-loc" placeholder="Ex: Le Privé, Paris">
+    <button class="btn-add" id="add-cal-btn">Ajouter</button>
   </div>
-  <div class="cal-list" id="cal-list">
-    <div class="empty">Aucune date planifiée.</div>
-  </div>
+  <div id="cal-list" style="margin-top:12px;"></div>
 
-  <div style="text-align: center; padding: 60px 20px 20px 20px; color: var(--text-dim); font-size: 12px; font-weight: bold; letter-spacing: 1px; opacity: 0.5;">
+  <!-- Version -->
+  <div style="text-align: center; padding: 50px 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-dim); opacity: 0.6;">
     1.1.0
   </div>
 </div>
@@ -123,33 +96,23 @@
 const $ = (id) => document.getElementById(id);
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-// Gestion du Thème
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem('floor_theme', t);
-  if ($('theme-toggle')) $('theme-toggle').textContent = t === 'dark' ? '☀' : '☾';
-}
-applyTheme(localStorage.getItem('floor_theme') || 'dark');
-$('theme-toggle').addEventListener('click', () => {
-  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-});
-
-// Synchronisation et Classement automatique
 async function updateDashboard() {
   try {
-    // Récupération des musiques (le serveur renvoie la liste déjà triée par votes)
+    // Playlist
     const resReq = await fetch('/api/requests');
     if (resReq.ok) {
       const data = await resReq.json();
       const items = data.requests || [];
-      $('main-list').innerHTML = items.length === 0 ? '<div class="empty">Aucun morceau demandé pour le moment.</div>' : items.map((track, index) => `
-        <div class="track-card ${index === 0 ? 'top-track' : ''}">
-          <div class="votes">${String(track.votes).padStart(2, '0')}</div>
-          <div class="meta">
-            <div class="title">${escapeHtml(track.title)}</div>
-            <div class="artist">${track.artist ? escapeHtml(track.artist) : 'Artiste non spécifié'}</div>
+      $('main-list').innerHTML = items.length === 0 ? '<div class="empty">Aucune demande en cours.</div>' : items.map(track => `
+        <div class="ticket">
+          <div class="ticket-num mono">${String(track.votes).padStart(2, '0')}</div>
+          <div class="ticket-body">
+            <div class="ticket-meta">
+              <div class="t">${escapeHtml(track.title)}</div>
+              <div class="a">${track.artist ? escapeHtml(track.artist) : 'Artiste non spécifié'}</div>
+            </div>
+            <button class="btn-done" data-id="${track.id}">✓</button>
           </div>
-          <button class="btn-done" data-id="${track.id}">✓</button>
         </div>
       `).join('');
 
@@ -161,48 +124,52 @@ async function updateDashboard() {
       });
     }
 
-    // Récupération des Messages
+    // Messages
     const resMsg = await fetch('/api/messages');
     if (resMsg.ok) {
       const data = await resMsg.json();
       const msgs = data.messages || [];
       $('msg-list').innerHTML = msgs.length === 0 ? '<div class="empty">Aucun message reçu.</div>' : msgs.map(m => `
-        <div class="msg-card">
-          <div class="meta">
-            <div class="msg-pseudo">${escapeHtml(m.pseudo)}</div>
-            <div class="msg-text">${escapeHtml(m.text)}</div>
+        <div class="ticket">
+          <div class="ticket-num mono" style="font-size:14px; width:50px; color:var(--ink-dim);">💬</div>
+          <div class="ticket-body">
+            <div class="ticket-meta">
+              <div class="a" style="color:var(--accent); font-weight:bold; font-size:11px;">${escapeHtml(m.pseudo)}</div>
+              <div class="t" style="font-size:16px; font-weight:normal; margin-top:2px;">${escapeHtml(m.text)}</div>
+            </div>
+            <div class="msg-time">${m.time}</div>
           </div>
-          <div class="msg-time">${m.time}</div>
         </div>
       `).reverse().join('');
     }
 
-    // Récupération du Calendrier
+    // Agenda
     const resCal = await fetch('/api/dates');
     if (resCal.ok) {
       const data = await resCal.json();
       const dates = data.dates || [];
-      $('cal-list').innerHTML = dates.length === 0 ? '<div class="empty">Aucune date affichée.</div>' : dates.map(d => `
-        <div class="cal-card">
-          <div class="meta">
-            <div class="title">${escapeHtml(d.date)}</div>
-            <div class="artist" style="color: var(--accent);">${escapeHtml(d.location)}</div>
+      $('cal-list').innerHTML = dates.length === 0 ? '<div class="empty">Aucune date programmée.</div>' : dates.map(d => `
+        <div class="ticket">
+          <div class="ticket-num mono" style="font-size:14px; width:50px;">📅</div>
+          <div class="ticket-body">
+            <div class="ticket-meta">
+              <div class="t">${escapeHtml(d.date)}</div>
+              <div class="a" style="color: var(--accent); font-weight:bold;">${escapeHtml(d.location)}</div>
+            </div>
           </div>
         </div>
       `).join('');
     }
-  } catch (err) { console.error(err); }
+  } catch (err) {}
 }
 
-// Boutons de nettoyage
 $('clear-btn').addEventListener('click', async () => {
-  if (confirm('Voulez-vous vider la playlist ?')) { await fetch('/api/dj/clear', { method: 'POST' }); updateDashboard(); }
+  if (confirm('Vider la playlist ?')) { await fetch('/api/dj/clear', { method: 'POST' }); updateDashboard(); }
 });
 $('clear-msg-btn').addEventListener('click', async () => {
-  if (confirm('Voulez-vous supprimer tous les messages ?')) { await fetch('/api/dj/messages/clear', { method: 'POST' }); updateDashboard(); }
+  if (confirm('Supprimer les messages ?')) { await fetch('/api/dj/messages/clear', { method: 'POST' }); updateDashboard(); }
 });
 
-// Ajouter au calendrier
 $('add-cal-btn').addEventListener('click', async () => {
   const date = $('cal-date').value.trim();
   const location = $('cal-loc').value.trim();
@@ -216,8 +183,8 @@ $('add-cal-btn').addEventListener('click', async () => {
   updateDashboard();
 });
 
+setInterval(updateDashboard, 2500);
 updateDashboard();
-setInterval(updateDashboard, 2000);
 </script>
 </body>
 </html>
