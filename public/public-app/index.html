@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Demander un Titre — v1.0</title>
+<title>Demander un Titre</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -11,27 +11,27 @@
     --bg: #0b0c10;
     --card: #1f2833;
     --text: #ffffff;
-    --text-dim: #9aa5b1;
+    --text-dim: #c5a059;
     --accent: #45f3ff;
     --border: #2c3540;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
   body { background: var(--bg); color: var(--text); padding: 15px; }
-  .container { max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
   
-  .panel { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 12px; }
-  h2 { font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; color: var(--accent); }
+  .panel { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 8px; }
+  h2 { font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; color: var(--accent); font-weight: 800; }
   
-  .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-  label { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  label { font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; }
   input, textarea { background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 6px; font-size: 15px; width: 100%; outline: none; }
   input:focus, textarea:focus { border-color: var(--accent); }
   
   button { background: var(--accent); color: #0b0c10; border: none; padding: 14px; font-size: 15px; font-weight: 800; border-radius: 6px; cursor: pointer; width: 100%; text-transform: uppercase; }
   button:active { transform: scale(0.98); }
 
-  .date-row { display: flex; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 6px; font-size: 14px; margin-bottom: 6px; }
-  .empty { text-align: center; color: var(--text-dim); font-size: 13px; font-style: italic; padding: 10px 0; }
+  .cal-row { display: flex; justify-content: space-between; padding: 12px; background: rgba(0,0,0,0.15); border: 1px solid var(--border); border-radius: 6px; font-size: 14px; margin-bottom: 8px; }
+  .empty { text-align: center; color: var(--text-dim); font-size: 14px; font-style: italic; }
 </style>
 </head>
 <body>
@@ -41,87 +41,83 @@
   <div class="panel">
     <h2>🎵 Demander un morceau</h2>
     <div class="form-group">
-      <label>Titre de la chanson *</label>
-      <input type="text" id="track-title" placeholder="Ex: Midnight City">
+      <label>Titre du morceau *</label>
+      <input type="text" id="track-title" placeholder="Ex: One More Time">
     </div>
     <div class="form-group">
-      <label>Artiste / Remix</label>
-      <input type="text" id="track-artist" placeholder="Ex: M83">
+      <label>Artiste</label>
+      <input type="text" id="track-artist" placeholder="Ex: Daft Punk">
     </div>
     <button id="send-track">Envoyer au DJ</button>
   </div>
 
   <div class="panel">
-    <h2>💬 Envoyer un message au DJ</h2>
+    <h2>💬 Envoyer un message à la régie</h2>
     <div class="form-group">
-      <label>Ton Pseudo (Optionnel)</label>
-      <input type="text" id="msg-pseudo" placeholder="Ex: Antoine de la table 4">
+      <label>Ton nom / Table (Optionnel)</label>
+      <input type="text" id="msg-pseudo" placeholder="Anonyme">
     </div>
     <div class="form-group">
-      <label>Ton Message *</label>
-      <textarea id="msg-text" rows="2" placeholder="Ex: Dédicace à Julie pour son anniv ! ou baisse un peu les basses stp"></textarea>
+      <label>Message *</label>
+      <textarea id="msg-text" rows="2" placeholder="Ex: Joyeux anniversaire à Ben !"></textarea>
     </div>
-    <button id="send-msg" style="background:transparent; border: 1px solid var(--accent); color:var(--accent);">Envoyer le Message</button>
+    <button id="send-msg" style="background: transparent; border: 1px solid var(--accent); color: var(--accent);">Transmettre le message</button>
   </div>
 
   <div class="panel">
-    <h2>📅 Prochaines Dates</h2>
+    <h2>📅 Agenda du DJ</h2>
     <div id="public-cal-list">
-      <div class="empty">Aucune date pour le moment.</div>
+      <div class="empty">Aucune date annoncée.</div>
     </div>
   </div>
 
   <div style="text-align: center; padding: 10px; color: var(--text-dim); font-size: 12px; font-weight: bold; letter-spacing: 1px; opacity: 0.4;">
-    v1.0 hi gemini
+    1.1.0
   </div>
 </div>
 
 <script>
 const $ = (id) => document.getElementById(id);
 
-// 1. Envoyer une Musique
+// Envoi musique
 $('send-track').addEventListener('click', async () => {
   const title = $('track-title').value.trim();
   const artist = $('track-artist').value.trim();
-  if(!title) return alert("Donne au moins le titre de la chanson !");
-
+  if(!title) return alert("Indique au moins le titre !");
   await fetch('/api/requests', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, artist })
   });
-  
   $('track-title').value = ''; $('track-artist').value = '';
-  alert("C'est envoyé au DJ ! 🎵");
+  alert("Demande envoyée ! 🎵");
 });
 
-// 2. Envoyer un Message
+// Envoi message
 $('send-msg').addEventListener('click', async () => {
   const pseudo = $('msg-pseudo').value.trim();
   const text = $('msg-text').value.trim();
-  if(!text) return alert("Écris d'abord un message !");
-
+  if(!text) return alert("Écris ton message !");
   await fetch('/api/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ pseudo, text })
   });
-
   $('msg-text').value = '';
-  alert("Message transmis dans la cabine DJ ! 💬");
+  alert("Message envoyé ! 💬");
 });
 
-// 3. Charger le Calendrier en boucle (toutes les 5 secondes)
+// Sync Calendrier
 async function loadCalendar() {
   try {
     const res = await fetch('/api/dates');
     if(res.ok) {
       const data = await res.json();
       const dates = data.dates || [];
-      $('public-cal-list').innerHTML = dates.length === 0 ? '<div class="empty">Aucune date annoncée pour le moment.</div>' : dates.map(d => `
-        <div class="date-row">
+      $('public-cal-list').innerHTML = dates.length === 0 ? '<div class="empty">Aucune date prévue pour le moment.</div>' : dates.map(d => `
+        <div class="cal-row">
           <strong>${d.date}</strong>
-          <span style="color:var(--accent)">${d.location}</span>
+          <span style="color: var(--accent); font-weight: bold;">${d.location}</span>
         </div>
       `).join('');
     }
