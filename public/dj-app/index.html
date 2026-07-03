@@ -1,96 +1,8 @@
-<!DOCTYPE html>
-<html lang="fr" data-theme="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DJ — Liste des Demandes</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0b0c10;
-    --card: #1f2833;
-    --text: #ffffff;
-    --text-dim: #c5a059;
-    --accent: #45f3ff;
-    --danger: #ff4b5c;
-    --border: #2c3540;
-  }
-  :root[data-theme="light"] {
-    --bg: #f4f6f9;
-    --card: #ffffff;
-    --text: #1a1a1a;
-    --text-dim: #666666;
-    --accent: #0070f3;
-    --danger: #e0245e;
-    --border: #e1e8ed;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-  body { background: var(--bg); color: var(--text); padding: 20px; transition: background 0.2s; }
-  .container { max-width: 800px; margin: 0 auto; }
-
-  /* Barre de contrôle du haut */
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
-  .header h1 { font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-  .controls { display: flex; gap: 12px; }
-  button { font-weight: 600; cursor: pointer; transition: all 0.1s ease; border-radius: 6px; }
-  
-  .btn-clear { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 8px 16px; font-size: 13px; }
-  .btn-clear:hover { background: var(--danger); color: #fff; }
-  .btn-theme { background: var(--card); border: 1px solid var(--border); color: var(--text); width: 38px; height: 38px; font-size: 16px; }
-
-  /* Liste principale */
-  .track-list { display: flex; flex-direction: column; gap: 12px; }
-  
-  .track-card { 
-    display: flex; align-items: center; 
-    background: var(--card); border: 1px solid var(--border); 
-    padding: 16px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  }
-  
-  /* Style spécial pour le morceau le plus attendu (le premier) */
-  .track-card.top-track { border-color: var(--accent); background: linear-gradient(145deg, var(--card), rgba(69, 243, 255, 0.03)); }
-  .track-card.top-track .votes { color: var(--accent); font-size: 32px; }
-
-  /* Compteur de votes à gauche */
-  .votes { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; min-width: 60px; text-align: center; margin-right: 16px; color: var(--text-dim); }
-  
-  /* Infos du morceau au milieu */
-  .meta { flex: 1; min-width: 0; padding-right: 15px; }
-  .title { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-  .artist { font-size: 14px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: 0.5px; }
-
-  /* Bouton d'action à droite */
-  .btn-done { background: #238636; color: #fff; border: none; width: 48px; height: 48px; font-size: 20px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
-  .btn-done:hover { background: #2ea043; transform: scale(1.05); }
-  .btn-done:active { transform: scale(0.95); }
-
-  .empty { text-align: center; padding: 60px 0; color: var(--text-dim); font-size: 15px; font-style: italic; }
-</style>
-</head>
-<body>
-
-<div class="container">
-  <div class="header">
-    <h1>Demandes Titres</h1>
-    <div class="controls">
-      <button class="btn-clear" id="clear-btn">Tout effacer</button>
-      <button class="btn-theme" id="theme-toggle">☀</button>
-    </div>
-  </div>
-
-  <div class="track-list" id="main-list">
-    <div class="empty">En attente de connexion...</div>
-  </div>
-</div>
-
-<script src="https://cdn.socketio.org/4.7.5/socket-io.min.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-// Thème interchangeable (Sombre par défaut pour les DJ)
+// Gestion du Thème
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('floor_theme', t);
@@ -102,51 +14,84 @@ $('theme-toggle').addEventListener('click', () => {
   applyTheme(current === 'dark' ? 'light' : 'dark');
 });
 
-// Connexion robuste au serveur
-const socket = io('/', { transports: ['polling', 'websocket'] });
+// FONCTION DE MISE À JOUR AVEC DÉTECTEUR DE PANNES INTÉGRÉ
+async function updateDashboard() {
+  try {
+    const res = await fetch('/api/requests');
+    
+    // Si le serveur répond mais renvoie une erreur (ex: 404 ou 500)
+    if (!res.ok) {
+      $('main-list').innerHTML = `
+        <div class="empty" style="color:var(--danger); font-weight:bold;">
+          ❌ ERREUR SERVEUR : ${res.status} ${res.statusText}<br>
+          <span style="font-size:12px; color:var(--text)">Le serveur Render existe mais la route /api/requests est introuvable.</span>
+        </div>`;
+      return;
+    }
 
-socket.on('connect', () => {
-  socket.emit('dj:join');
-});
+    const data = await res.json();
+    const listContainer = $('main-list');
+    const items = data.requests || [];
 
-// Rendu ultra-simple : juste les titres triés par votes
-socket.on('state', (state) => {
-  const listContainer = $('main-list');
-  const items = state.requests || [];
+    if (items.length === 0) {
+      listContainer.innerHTML = '<div class="empty">Aucun morceau demandé pour le moment.</div>';
+      return;
+    }
 
-  if (items.length === 0) {
-    listContainer.innerHTML = '<div class="empty">Aucun morceau demandé pour le moment.</div>';
-    return;
-  }
-
-  listContainer.innerHTML = items.map((track, index) => {
-    const isTop = index === 0; // Le premier de la liste est le plus demandé
-    return `
-      <div class="track-card ${isTop ? 'top-track' : ''}">
-        <div class="votes">${String(track.votes).padStart(2, '0')}</div>
-        <div class="meta">
-          <div class="title">${escapeHtml(track.title)}</div>
-          <div class="artist">${track.artist ? escapeHtml(track.artist) : 'Artiste non spécifié'}</div>
+    listContainer.innerHTML = items.map((track, index) => {
+      const isTop = index === 0;
+      return `
+        <div class="track-card ${isTop ? 'top-track' : ''}">
+          <div class="votes">${String(track.votes).padStart(2, '0')}</div>
+          <div class="meta">
+            <div class="title">${escapeHtml(track.title)}</div>
+            <div class="artist">${track.artist ? escapeHtml(track.artist) : 'Artiste non spécifié'}</div>
+          </div>
+          <button class="btn-done" data-id="${track.id}" title="Marquer comme joué">✓</button>
         </div>
-        <button class="btn-done" data-id="${track.id}" title="Marquer comme joué">✓</button>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
 
-  // Gestion des clics sur "Joué"
-  listContainer.querySelectorAll('.btn-done').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      socket.emit('dj:done', { id: btn.dataset.id });
+    // Actions des boutons "Joué"
+    listContainer.querySelectorAll('.btn-done').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        try {
+          await fetch(`/api/dj/done/${id}`, { method: 'POST' });
+          updateDashboard();
+        } catch(e) {
+          alert("Impossible de valider ce morceau : " + e.message);
+        }
+      });
     });
-  });
-});
 
-// Bouton reset général
-$('clear-btn').addEventListener('click', () => {
+  } catch (err) {
+    // Si la requête ne part pas du tout (Erreur de réseau / fichier local file://)
+    $('main-list').innerHTML = `
+      <div class="empty" style="color:var(--danger); font-weight:bold; line-height:1.6;">
+        ⚠️ ERREUR DE CONNEXION <br>
+        <span style="font-size:13px; color:var(--text); font-style:normal; display:block; margin-top:8px;">
+          L'application n'arrive pas à contacter l'API.<br>
+          Vérifie bien que tu es sur ton lien internet Render (https://...) et <strong>non en local</strong> (file:///).
+        </span>
+        <small style="color:var(--text-dim); display:block; margin-top:4px; font-family:monospace;">Detail : ${err.message}</small>
+      </div>`;
+  }
+}
+
+// Action Tout effacer
+$('clear-btn').addEventListener('click', async () => {
   if (confirm('Voulez-vous réinitialiser toute la liste de demandes ?')) {
-    socket.emit('dj:clear');
+    try {
+      await fetch('/api/dj/clear', { method: 'POST' });
+      updateDashboard();
+    } catch(e) {
+      alert("Erreur lors du nettoyage : " + e.message);
+    }
   }
 });
+
+// Démarrage et boucle de rafraîchissement (toutes les 2 secondes)
+updateDashboard();
+setInterval(updateDashboard, 2000);
 </script>
-</body>
-</html>
