@@ -8,7 +8,6 @@ const crypto = require('crypto');
 const path = require('path');
 
 const PORT = process.env.PORT || 3000;
-const DJ_PASSWORD = process.env.DJ_PASSWORD || 'changeme';
 
 const app = express();
 const server = http.createServer(app);
@@ -107,7 +106,6 @@ app.post('/api/vote/:id', (req, res) => {
 app.get('/api/qrcode', async (req, res) => {
   try {
     const host = req.get('host');
-    // Utilise l'adresse du vrai site sur Render de manière dynamique !
     const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
     const url = `${protocol}://${host}/public-app/`;
     const dataUrl = await QRCode.toDataURL(url, { margin: 2, scale: 6 });
@@ -117,13 +115,9 @@ app.get('/api/qrcode', async (req, res) => {
   }
 });
 
-// --- WebSockets (Communication en temps réel avec le DJ) ---
+// --- WebSockets (Communication en temps réel avec le DJ - SANS MOT DE PASSE) ---
 io.on('connection', (socket) => {
-  socket.on('dj:join', ({ password }) => {
-    if (password !== DJ_PASSWORD) {
-      socket.emit('dj:unauthorized');
-      return;
-    }
+  socket.on('dj:join', () => {
     socket.join('dj-room');
     socket.emit('state', {
       requests: [...requests].sort((a, b) => b.votes - a.votes),
