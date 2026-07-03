@@ -15,7 +15,7 @@
     --ink-dim:#6b6b75;
     --accent:#2f6fed;
     --accent-ink:#ffffff;
-    --eyebrow:#2f6fed; /* Bleu Roi pour la typo écrite */
+    --eyebrow:#2f6fed; 
     --torn:#d8d4c4;
     --overlay:rgba(20,18,10,.5);
     --hero-bg:#eef4fd;
@@ -39,7 +39,7 @@
     color:var(--ink);
     font-family:'Oswald',-apple-system,sans-serif;
     min-height:100vh;
-    padding-bottom:50px;
+    padding-bottom:80px;
     transition:background .2s ease, color .2s ease;
   }
   .mono{font-family:'JetBrains Mono',monospace;}
@@ -94,7 +94,7 @@
   }
   .hero .eyebrow{font-size:20px;}
   .hero h2{
-    font-family:'Impact','Haettenschweiler','Arial Narrow Bold',sans-serif;
+    font-family:'Impact',sans-serif;
     font-size:28px;
     text-transform:uppercase;
     color:var(--ink);
@@ -129,6 +129,7 @@
     border-radius:4px;
     padding:18px;
     position:relative;
+    scroll-margin-top: 20px;
   }
   .ticket-form::before{
     content:"";
@@ -177,15 +178,16 @@
   }
 
   .section-title{
-    font-family:'Impact','Haettenschweiler','Arial Narrow Bold',sans-serif;
+    font-family:'Impact',sans-serif;
     font-size:24px;
     text-transform:uppercase;
     color:var(--ink);
     margin:32px 0 12px;
     letter-spacing: .02em;
+    scroll-margin-top: 20px;
   }
 
-  /* --- Liste d'attente & Agenda --- */
+  /* --- Liste & Tickets --- */
   .ticket{
     display:flex;
     align-items:stretch;
@@ -218,21 +220,9 @@
     gap:10px;
   }
   .ticket-meta{min-width:0;}
-  .ticket-meta .t{
-    font-size:16px;
-    font-weight:500;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .ticket-meta .a{
-    font-family:'JetBrains Mono',monospace;
-    font-size:11px;
-    color:var(--ink-dim);
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
+  .ticket-meta .t{ font-size:16px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ticket-meta .a{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  
   .vote-btn{
     flex-shrink:0;
     background:transparent;
@@ -247,78 +237,72 @@
     letter-spacing:.06em;
     cursor:pointer;
   }
-  .vote-btn:disabled{
-    border-color:var(--paper-line);
-    color:var(--ink-dim);
-    cursor:default;
-  }
+  .vote-btn:disabled{ border-color:var(--paper-line); color:var(--ink-dim); cursor:default; }
 
-  .empty{
-    font-family:'JetBrains Mono',monospace;
-    color:var(--ink-dim);
-    font-size:12px;
-    text-align:center;
-    padding:22px 0;
-  }
+  .empty{ font-family:'JetBrains Mono',monospace; color:var(--ink-dim); font-size:12px; text-align:center; padding:22px 0; }
 
   .toast{
-    position:fixed;
-    bottom:22px;left:50%;
-    transform:translateX(-50%) translateY(100px);
-    background:var(--accent);
-    color:var(--accent-ink);
-    padding:11px 20px;
-    border-radius:3px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    transition:transform .3s ease;
-    z-index:50;
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(100px);
+    background:var(--accent); color:var(--accent-ink); padding:11px 20px; border-radius:3px;
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; text-transform:uppercase; transition:transform .3s ease; z-index:110;
   }
   .toast.show{transform:translateX(-50%) translateY(0);}
 
-  /* --- Modales --- */
+  /* --- MODALE AVEC ANIMATION BAS/HAUT --- */
   .modal-overlay{
     position:fixed; inset:0;
     background:var(--overlay);
-    display:flex;
-    align-items:flex-end;
-    justify-content:center;
+    display:flex; align-items:flex-end; justify-content:center;
     z-index:100;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s ease;
   }
-  .modal-overlay[hidden]{display:none;}
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  
   .modal-panel{
     background:var(--paper);
     border:1px solid var(--paper-line);
     border-radius:14px 14px 0 0;
-    width:100%;
-    max-width:560px;
-    height:88vh;
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
+    width:100%; max-width:560px; height:88vh;
+    display:flex; flex-direction:column; overflow:hidden;
+    /* Animation de départ : en bas */
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  .modal-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:14px 16px;
-    border-bottom:1px solid var(--paper-line);
+  .modal-overlay.open .modal-panel { transform: translateY(0); } /* Animation d'ouverture : remonte */
+
+  .modal-header{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--paper-line); }
+  .modal-header .t{font-size:15px; font-weight:700; text-transform:uppercase;}
+  .modal-close{ background:transparent; border:1px solid var(--paper-line); color:var(--ink); width:30px; height:30px; border-radius:50%; font-size:14px; cursor:pointer; }
+  .modal-body{flex:1; position:relative; background:var(--bg);}
+  .modal-body iframe{width:100%; height:100%; border:none;}
+
+  /* --- MENU DE NAVIGATION RAPIDE --- */
+  .nav-menu-container {
+    position: fixed; bottom: 20px; right: 20px; z-index: 90;
   }
-  .modal-header .t{font-size:15px;font-weight:700;text-transform:uppercase;font-family:'Oswald',sans-serif;}
-  .modal-close{
-    background:transparent;
-    border:1px solid var(--paper-line);
-    color:var(--ink);
-    width:30px;height:30px;
-    border-radius:50%;
-    font-size:14px;
-    cursor:pointer;
+  .menu-toggle-btn {
+    background: var(--accent); color: var(--accent-ink); border: none;
+    width: 52px; height: 52px; border-radius: 50%;
+    font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 11px;
+    text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center; letter-spacing: 0.5px;
   }
-  .modal-body{flex:1;position:relative;background:var(--bg);}
-  .modal-body iframe{width:100%;height:100%;border:none;}
+  .menu-dropdown {
+    position: absolute; bottom: 62px; right: 0;
+    background: var(--paper); border: 1px solid var(--paper-line);
+    border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 4px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15); min-width: 170px;
+    opacity: 0; transform: translateY(15px); pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .menu-dropdown.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .menu-dropdown a {
+    color: var(--ink); text-decoration: none; font-family: 'Oswald', sans-serif;
+    text-transform: uppercase; font-size: 13px; padding: 10px 12px; border-radius: 4px;
+    transition: background 0.2s, color 0.2s; display: block;
+  }
+  .menu-dropdown a:hover { background: var(--bg); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -326,35 +310,47 @@
 <div class="head">
   <button class="theme-toggle" id="theme-toggle">☾</button>
   <div class="eyebrow">Bon de demande</div>
-  <h1>Demande un titre</h1>
+  <h1>Demande un titre[cite: 1]</h1>
+</div>
+
+<!-- MENU RAPIDE FLOTTANT -->
+<div class="nav-menu-container">
+  <button class="menu-toggle-btn" id="menu-main-btn">Menu</button>
+  <div class="menu-dropdown" id="menu-box">
+    <a href="#sec-cagnotte" class="menu-link">Soutenir le DJ</a>
+    <a href="#sec-musique" class="menu-link">Proposer un titre</a>
+    <a href="#sec-message" class="menu-link">Message au DJ</a>
+    <a href="#sec-agenda" class="menu-link">Agenda</a>
+    <a href="#sec-attente" class="menu-link">File d'attente</a>
+  </div>
 </div>
 
 <div class="wrap">
-  <!-- Cagnotte Restaurée -->
-  <div class="hero">
-    <div class="eyebrow">Coup de pouce</div>
-    <h2>Soutiens le DJ</h2>
-    <p>Cette soirée n'a pas de prix, mais les prochaines platines si 🎧<br>Chaque petit geste aide.</p>
-    <button class="hero-btn" id="cagnotte-fab">Voir la cagnotte</button>
+  <!-- Section Cagnotte -->
+  <div class="hero" id="sec-cagnotte">
+    <div class="eyebrow">Coup de pouce[cite: 1]</div>
+    <h2>Soutiens le DJ[cite: 1]</h2>
+    <p>Cette soirée n'a pas de prix, mais les prochaines platines si 🎧<br>Chaque petit geste aide.[cite: 1]</p>
+    <button class="hero-btn" id="cagnotte-fab">Voir la cagnotte[cite: 1]</button>
   </div>
 
-  <!-- Formulaire Titre -->
-  <div class="ticket-form">
+  <!-- Section Musique -->
+  <div class="ticket-form" id="sec-musique">
     <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Choix musical</div>
     <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:12px; font-weight:400;">Proposer un morceau</h2>
     <div class="field">
-      <label>Titre du morceau</label>
-      <input id="f-title" type="text" placeholder="ex: One More Time">
+      <label>Titre du morceau[cite: 1]</label>
+      <input id="f-title" type="text" placeholder="ex: One More Time[cite: 1]">
     </div>
     <div class="field">
-      <label>Artiste</label>
-      <input id="f-artist" type="text" placeholder="ex: Daft Punk">
+      <label>Artiste[cite: 1]</label>
+      <input id="f-artist" type="text" placeholder="ex: Daft Punk[cite: 1]">
     </div>
-    <button class="submit" id="submit-btn">Envoyer au DJ</button>
+    <button class="submit" id="submit-btn">Envoyer au DJ[cite: 1]</button>
   </div>
 
-  <!-- Formulaire Message Corrigé -->
-  <div class="ticket-form" style="margin-top: 22px;">
+  <!-- Section Message -->
+  <div class="ticket-form" id="sec-message" style="margin-top: 22px;">
     <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Ligne directe</div>
     <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:12px; font-weight:400;">Envoyer un message au DJ</h2>
     <div class="field">
@@ -368,86 +364,98 @@
     <button class="submit" id="submit-msg-btn" style="background: transparent; border: 2px solid var(--accent); color: var(--accent);">Transmettre le message</button>
   </div>
 
-  <!-- Agenda DJ -->
-  <div class="section-title">Agenda du DJ</div>
+  <!-- Section Agenda -->
+  <div class="section-title" id="sec-agenda">Agenda du DJ</div>
   <div id="public-cal-list">
     <div class="empty">Aucune date annoncée pour le moment.</div>
   </div>
 
-  <!-- Classement File d'attente -->
-  <div class="section-title">File d'attente (Par votes)</div>
+  <!-- Section Attente -->
+  <div class="section-title" id="sec-attente">File d'attente (Par votes)</div>
   <div id="vote-list"></div>
 
   <!-- Footer Propre -->
   <div style="text-align: center; padding: 40px 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-dim); opacity: 0.6;">
-    1.1.0
+    1.2.0
   </div>
 </div>
 
-<!-- Modale Cagnotte -->
-<div class="modal-overlay" id="cagnotte-modal" hidden>
+<!-- Modale Cagnotte Animée -->
+<div class="modal-overlay" id="cagnotte-modal">
   <div class="modal-panel">
     <div class="modal-header">
-      <div class="t">Cagnotte — ma prochaine platine</div>
+      <div class="t">Cagnotte — ma prochaine platine[cite: 1]</div>
       <button class="modal-close" id="modal-close">✕</button>
     </div>
     <div class="modal-body">
-      <iframe id="cagnotte-iframe" src="" title="Cagnotte"></iframe>
+      <iframe id="cagnotte-iframe" src="" title="Cagnotte[cite: 1]"></iframe>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast">Demande envoyée</div>
+<div class="toast" id="toast">Demande envoyée[cite: 1]</div>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const CAGNOTTE_URL = 'https://www.lepotcommun.fr/cagnotte/festive/ma-prochaine-platine-kc35w9qk?_se=YXVndXN0aW4uZmxvcXVldEBpY2xvdWQuY29t';
+const CAGNOTTE_URL = 'https://www.lepotcommun.fr/cagnotte/festive/ma-prochaine-platine-kc35w9qk?_se=YXVndXN0aW4uZmxvcXVldEBpY2xvdWQuY29t';[cite: 1]
 
+// Thème
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('floor_theme', t);
-  $('theme-toggle').textContent = t === 'dark' ? '☀' : '☾';
+  $('theme-toggle').textContent = t === 'dark' ? '☀' : '☾';[cite: 1]
 }
-applyTheme(localStorage.getItem('floor_theme') || 'light');
+applyTheme(localStorage.getItem('floor_theme') || 'light');[cite: 1]
 $('theme-toggle').addEventListener('click', () => {
-  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');[cite: 1]
 });
 
+// Gestion du Menu Rapide
+$('menu-main-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  $('menu-box').classList.toggle('active');
+});
+document.querySelectorAll('.menu-link').forEach(link => {
+  link.addEventListener('click', () => $('menu-box').classList.remove('active'));
+});
+document.addEventListener('click', () => $('menu-box').classList.remove('active'));
+
+// Cagnotte (Animations d'ouverture/fermeture via classes CSS)
 $('cagnotte-fab').addEventListener('click', () => {
-  $('cagnotte-iframe').src = CAGNOTTE_URL;
-  $('cagnotte-modal').hidden = false;
+  $('cagnotte-iframe').src = CAGNOTTE_URL;[cite: 1]
+  $('cagnotte-modal').classList.add('open');
 });
 $('modal-close').addEventListener('click', () => {
-  $('cagnotte-modal').hidden = true;
-  $('cagnotte-iframe').src = '';
+  $('cagnotte-modal').classList.remove('open');
+  setTimeout(() => { $('cagnotte-iframe').src = ''; }, 400); // Attend la fin de l'anim de descente
 });
 
-const VOTED_KEY = 'floor_request_voted_ids';
-function getVoted(){ try { return JSON.parse(localStorage.getItem(VOTED_KEY) || '[]'); } catch(e){ return []; } }
-function addVoted(id){ const v = getVoted(); v.push(id); localStorage.setItem(VOTED_KEY, JSON.stringify(v)); }
-function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+const VOTED_KEY = 'floor_request_voted_ids';[cite: 1]
+function getVoted(){ try { return JSON.parse(localStorage.getItem(VOTED_KEY) || '[]'); } catch(e){ return []; } }[cite: 1]
+function addVoted(id){ const v = getVoted(); v.push(id); localStorage.setItem(VOTED_KEY, JSON.stringify(v)); }[cite: 1]
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }[cite: 1]
 
 function showToast(msg){
-  const t = $('toast'); t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');[cite: 1]
+  setTimeout(() => t.classList.remove('show'), 2200);[cite: 1]
 }
 
-// Envoi Titre Musique
+// Envoi Titre
 $('submit-btn').addEventListener('click', async () => {
-  const title = $('f-title').value.trim();
-  const artist = $('f-artist').value.trim();
+  const title = $('f-title').value.trim();[cite: 1]
+  const artist = $('f-artist').value.trim();[cite: 1]
   if(!title) return;
   await fetch('/api/requests', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, artist }),
   });
-  $('f-title').value = ''; $('f-artist').value = '';
-  showToast('Demande envoyée');
-  loadVoteList();
+  $('f-title').value = ''; $('f-artist').value = '';[cite: 1]
+  showToast('Demande envoyée');[cite: 1]
+  loadVoteList();[cite: 1]
 });
 
-// Envoi Message au DJ
+// Envoi Message
 $('submit-msg-btn').addEventListener('click', async () => {
   const pseudo = $('f-pseudo').value.trim();
   const text = $('f-message').value.trim();
@@ -464,51 +472,50 @@ $('submit-msg-btn').addEventListener('click', async () => {
 // Charger la playlist triée
 async function loadVoteList(){
   try {
-    const res = await fetch('/api/requests');
-    const data = await res.json();
-    const voted = getVoted();
-    const box = $('vote-list');
+    const res = await fetch('/api/requests');[cite: 1]
+    const data = await res.json();[cite: 1]
+    const voted = getVoted();[cite: 1]
+    const box = $('vote-list');[cite: 1]
 
     if(!data.requests || data.requests.length === 0){
-      box.innerHTML = '<div class="empty">Aucune demande pour l\'instant — sois le premier</div>';
+      box.innerHTML = '<div class="empty">Aucune demande pour l\'instant — sois le premier</div>';[cite: 1]
       return;
     }
 
     box.innerHTML = data.requests.map((r) => {
-      const already = voted.includes(r.id);
+      const already = voted.includes(r.id);[cite: 1]
       return `
         <div class="ticket">
           <div class="ticket-num mono">${String(r.votes).padStart(2,'0')}</div>
           <div class="ticket-body">
             <div class="ticket-meta">
-              <div class="t">${escapeHtml(r.title)}</div>
-              <div class="a">${r.artist ? escapeHtml(r.artist) : 'artiste non precise'}</div>
+              <div class="t">${escapeHtml(r.title)}</div>[cite: 1]
+              <div class="a">${r.artist ? escapeHtml(r.artist) : 'artiste non precise'}</div>[cite: 1]
             </div>
-            <button class="vote-btn" data-title="${escapeHtml(r.title)}" data-artist="${escapeHtml(r.artist)}" data-id="${r.id}" ${already ? 'disabled' : ''}>${already ? 'Voté' : 'Voter'}</button>
+            <button class="vote-btn" data-title="${escapeHtml(r.title)}" data-artist="${escapeHtml(r.artist)}" data-id="${r.id}" ${already ? 'disabled' : ''}>${already ? 'Voté' : 'Voter'}</button>[cite: 1]
           </div>
         </div>
       `;
     }).join('');
 
-    box.querySelectorAll('.vote-btn:not(:disabled)').forEach((btn) => {
+    box.querySelectorAll('.vote-btn:not(:disabled)').forEach((btn) => {[cite: 1]
       btn.addEventListener('click', async () => {
-        const id = btn.dataset.id;
-        btn.disabled = true;
-        // Envoi d'une requête identique pour utiliser le système d'incrémentation par doublon du serveur
+        const id = btn.dataset.id;[cite: 1]
+        btn.disabled = true;[cite: 1]
         await fetch('/api/requests', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: btn.dataset.title, artist: btn.dataset.artist })
         });
-        addVoted(id);
+        addVoted(id);[cite: 1]
         showToast('Vote enregistré');
-        loadVoteList();
+        loadVoteList();[cite: 1]
       });
     });
   } catch(e){}
 }
 
-// Charger l'agenda
+// Agenda
 async function loadCalendar() {
   try {
     const res = await fetch('/api/dates');
@@ -530,9 +537,9 @@ async function loadCalendar() {
   } catch(e) {}
 }
 
-setInterval(loadVoteList, 3000);
+setInterval(loadVoteList, 3000);[cite: 1]
 setInterval(loadCalendar, 5000);
-loadVoteList();
+loadVoteList();[cite: 1]
 loadCalendar();
 </script>
 </body>
