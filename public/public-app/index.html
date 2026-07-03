@@ -249,14 +249,14 @@
   }
   .toast.show{transform:translateX(-50%) translateY(0);}
 
-  /* --- Modale Cagnotte --- */
+  /* --- MODALE CAGNOTTE ANIMATION FLUIDE ET RALENTIE (0.65s) --- */
   .modal-overlay{
     position:fixed; inset:0;
     background:var(--overlay);
     display:flex; align-items:flex-end; justify-content:center;
     z-index:100;
     opacity: 0; pointer-events: none;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .modal-overlay.open { opacity: 1; pointer-events: auto; }
   
@@ -267,7 +267,7 @@
     width:100%; max-width:560px; height:88vh;
     display:flex; flex-direction:column; overflow:hidden;
     transform: translateY(100%);
-    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .modal-overlay.open .modal-panel { transform: translateY(0); }
 
@@ -277,7 +277,7 @@
   .modal-body{flex:1; position:relative; background:var(--bg);}
   .modal-body iframe{width:100%; height:100%; border:none;}
 
-  /* --- NAVIGATION & EFFET LIQUID GLASS --- */
+  /* --- BOUTON DE NAVIGATION UNIFIÉ EN EFFET LIQUID GLASS --- */
   .nav-menu-container {
     position: fixed; top: 20px; left: 20px; z-index: 170;
   }
@@ -302,11 +302,11 @@
     background: rgba(47, 111, 237, 0.3);
   }
   
-  /* ANIMATION RALENTIE ET ASSOUPLIE (0.65s) */
+  /* MENU PLEIN ÉCRAN ANIMÉ CONSERVÉ À 0.65s */
   .menu-dropdown {
     position: fixed; inset: 0;
     background: var(--paper); display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 20px;
+    align-items: center; justify-content: center; gap: 24px;
     z-index: 160; opacity: 0; pointer-events: none;
     transform: translateY(-100%);
     transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.65s ease;
@@ -314,31 +314,10 @@
   .menu-dropdown.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .menu-dropdown a {
     color: var(--ink); text-decoration: none; font-family: 'Oswald', sans-serif;
-    text-transform: uppercase; font-size: 26px; padding: 8px 20px; letter-spacing: 0.04em;
+    text-transform: uppercase; font-size: 26px; padding: 10px 20px; letter-spacing: 0.04em;
     transition: color 0.2s; display: block; text-align: center;
   }
   .menu-dropdown a:hover { color: var(--accent); }
-
-  /* Bouton Explicite Sortie de Menu */
-  .menu-close-explicit {
-    margin-top: 15px;
-    background: transparent;
-    border: 1px dashed var(--ink-dim);
-    color: var(--ink-dim);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    letter-spacing: 0.08em;
-    transition: all 0.2s ease;
-  }
-  .menu-close-explicit:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
 </style>
 </head>
 <body>
@@ -349,18 +328,15 @@
   <h1>Demande un titre</h1>
 </div>
 
-<!-- LE BOUTON MENU GLASSMORPHIC -->
+<!-- BOUTON UNIQUE DE COMMANDE (RESTE VISIBLE AU MÊME ENDROIT POUR OUVRIR / FERMER) -->
 <div class="nav-menu-container">
   <button class="menu-toggle-btn" id="menu-main-btn">☰</button>
-  <!-- MENU PLEIN ÉCRAN ACCÉLÉRATION LISSÉE -->
   <div class="menu-dropdown" id="menu-box">
     <a href="#sec-musique" class="menu-link">Proposer une musique</a>
     <a href="#sec-attente" class="menu-link">File d'attente</a>
     <a href="#sec-agenda" class="menu-link">Agenda</a>
     <a href="#sec-message" class="menu-link">Envoyer un message</a>
     <a href="#sec-contact" class="menu-link">Contact</a>
-    <!-- NOUVEAU BOUTON POUR SORTIR DU MENU -->
-    <button class="menu-close-explicit" id="menu-quit-btn">✕ Fermer le menu</button>
   </div>
 </div>
 
@@ -423,7 +399,7 @@
 
   <!-- Footer -->
   <div style="text-align: center; padding: 40px 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-dim); opacity: 0.6;">
-    1.3.1
+    1.3.2
   </div>
 </div>
 
@@ -456,7 +432,7 @@ $('theme-toggle').addEventListener('click', () => {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 });
 
-// Logique d'ouverture/fermeture du menu
+// Logique unifiée d'ouverture/fermeture du menu au même endroit
 function closeMenu() {
   $('menu-box').classList.remove('active');
   $('menu-main-btn').textContent = '☰';
@@ -466,21 +442,18 @@ $('menu-main-btn').addEventListener('click', (e) => {
   const isActive = $('menu-box').classList.toggle('active');
   $('menu-main-btn').textContent = isActive ? '✕' : '☰';
 });
-// Fermeture via le nouveau bouton de sortie dédié
-$('menu-quit-btn').addEventListener('click', closeMenu);
-// Fermeture en cliquant sur un lien
 document.querySelectorAll('.menu-link').forEach(link => {
   link.addEventListener('click', closeMenu);
 });
 
-// Cagnotte animations
+// Cagnotte animations synchronisées à 0.65s (650ms)
 $('cagnotte-fab').addEventListener('click', () => {
   $('cagnotte-iframe').src = CAGNOTTE_URL;
   $('cagnotte-modal').classList.add('open');
 });
 $('modal-close').addEventListener('click', () => {
   $('cagnotte-modal').classList.remove('open');
-  setTimeout(() => { $('cagnotte-iframe').src = ''; }, 400);
+  setTimeout(() => { $('cagnotte-iframe').src = ''; }, 650);
 });
 
 const VOTED_KEY = 'floor_request_voted_ids';
