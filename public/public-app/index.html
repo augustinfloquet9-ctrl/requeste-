@@ -249,7 +249,7 @@
   }
   .toast.show{transform:translateX(-50%) translateY(0);}
 
-  /* --- MODALE AVEC ANIMATION BAS/HAUT --- */
+  /* --- MODALE CAGNOTTE ANIMÉE (BAS -> HAUT) --- */
   .modal-overlay{
     position:fixed; inset:0;
     background:var(--overlay);
@@ -277,32 +277,32 @@
   .modal-body{flex:1; position:relative; background:var(--bg);}
   .modal-body iframe{width:100%; height:100%; border:none;}
 
-  /* --- MENU FLOTTANT DE SECTIONS (HAUT GAUCHE, ICONE ☰) --- */
+  /* --- NOUVEAU MENU PLEIN ÉCRAN (HAUT GAUCHE, ICONE ☰) --- */
   .nav-menu-container {
-    position: fixed; top: 20px; left: 20px; z-index: 90;
+    position: fixed; top: 20px; left: 20px; z-index: 170;
   }
   .menu-toggle-btn {
     background: var(--accent); color: var(--accent-ink); border: none;
-    width: 42px; height: 42px; border-radius: 50%;
-    font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    width: 44px; height: 44px; border-radius: 50%;
+    font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     display: flex; align-items: center; justify-content: center;
-    line-height: 1;
+    line-height: 1; transition: background 0.2s;
   }
   .menu-dropdown {
-    position: absolute; top: 52px; left: 0;
-    background: var(--paper); border: 1px solid var(--paper-line);
-    border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 4px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15); min-width: 175px;
-    opacity: 0; transform: translateY(-15px); pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    position: fixed; inset: 0;
+    background: var(--paper); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 24px;
+    z-index: 160; opacity: 0; pointer-events: none;
+    transform: translateY(-100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
   }
   .menu-dropdown.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .menu-dropdown a {
     color: var(--ink); text-decoration: none; font-family: 'Oswald', sans-serif;
-    text-transform: uppercase; font-size: 13px; padding: 10px 12px; border-radius: 4px;
-    transition: background 0.2s, color 0.2s; display: block;
+    text-transform: uppercase; font-size: 26px; padding: 10px 20px; letter-spacing: 0.04em;
+    transition: color 0.2s; display: block; text-align: center;
   }
-  .menu-dropdown a:hover { background: var(--bg); color: var(--accent); }
+  .menu-dropdown a:hover { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -313,20 +313,18 @@
   <h1>Demande un titre</h1>
 </div>
 
-<!-- MENU EN HAUT À GAUCHE AVEC LES TROIS BARRES HORIZONTALES -->
 <div class="nav-menu-container">
   <button class="menu-toggle-btn" id="menu-main-btn">☰</button>
   <div class="menu-dropdown" id="menu-box">
-    <a href="#sec-cagnotte" class="menu-link">Soutenir le DJ</a>
-    <a href="#sec-musique" class="menu-link">Proposer un titre</a>
-    <a href="#sec-message" class="menu-link">Message au DJ</a>
-    <a href="#sec-agenda" class="menu-link">Agenda</a>
+    <a href="#sec-musique" class="menu-link">Proposer une musique</a>
     <a href="#sec-attente" class="menu-link">File d'attente</a>
+    <a href="#sec-agenda" class="menu-link">Agenda</a>
+    <a href="#sec-message" class="menu-link">Envoyer un message</a>
+    <a href="#sec-contact" class="menu-link">Contact</a>
   </div>
 </div>
 
 <div class="wrap">
-  <!-- Section Cagnotte -->
   <div class="hero" id="sec-cagnotte">
     <div class="eyebrow">Coup de pouce</div>
     <h2>Soutiens le DJ</h2>
@@ -334,7 +332,6 @@
     <button class="hero-btn" id="cagnotte-fab">Voir la cagnotte</button>
   </div>
 
-  <!-- Section Musique -->
   <div class="ticket-form" id="sec-musique">
     <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Choix musical</div>
     <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:12px; font-weight:400;">Proposer un morceau</h2>
@@ -349,38 +346,40 @@
     <button class="submit" id="submit-btn">Envoyer au DJ</button>
   </div>
 
-  <!-- Section Message -->
-  <div class="ticket-form" id="sec-message" style="margin-top: 22px;">
-    <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Ligne directe</div>
-    <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:12px; font-weight:400;">Envoyer un message au DJ</h2>
-    <div class="field">
-      <label>Ton nom / Table (Optionnel)</label>
-      <input id="f-pseudo" type="text" placeholder="ex: Anonyme / Table 4">
-    </div>
-    <div class="field">
-      <label>Message</label>
-      <input id="f-message" type="text" placeholder="ex: Joyeux anniversaire à Ben !">
-    </div>
-    <button class="submit" id="submit-msg-btn" style="background: transparent; border: 2px solid var(--accent); color: var(--accent);">Transmettre le message</button>
-  </div>
+  <div class="section-title" id="sec-attente">File d'attente (Par votes)</div>
+  <div id="vote-list"></div>
 
-  <!-- Section Agenda -->
   <div class="section-title" id="sec-agenda">Agenda du DJ</div>
   <div id="public-cal-list">
     <div class="empty">Aucune date annoncée pour le moment.</div>
   </div>
 
-  <!-- Section Attente -->
-  <div class="section-title" id="sec-attente">File d'attente (Par votes)</div>
-  <div id="vote-list"></div>
+  <div class="ticket-form" id="sec-message" style="margin-top: 22px;">
+    <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Ligne directe</div>
+    <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:12px; font-weight:400;">Envoyer un message au DJ</h2>
+    <div class="field">
+      <label>Ton nom / Table</label>
+      <input id="f-pseudo" type="text" placeholder="Anonyme / Jérôme">
+    </div>
+    <div class="field">
+      <label>Message</label>
+      <input id="f-message" type="text" placeholder="Dispo le 18 ?">
+    </div>
+    <button class="submit" id="submit-msg-btn" style="background: transparent; border: 2px solid var(--accent); color: var(--accent);">Transmettre le message</button>
+  </div>
 
-  <!-- Footer Propre -->
+  <div class="ticket-form" id="sec-contact" style="margin-top: 22px; text-align: center; padding: 26px 16px;">
+    <div class="eyebrow" style="font-size: 18px; margin-bottom: 4px;">Restons connectés</div>
+    <h2 style="font-family:'Impact',sans-serif; font-size:24px; text-transform:uppercase; margin-bottom:10px; font-weight:400;">Page Contact</h2>
+    <p style="font-size: 14px; color: var(--ink-dim); line-height: 1.5; margin-bottom: 14px;">Une question, une demande de prestation ou envie de discuter ? Écris-moi sur mon adresse e-mail :</p>
+    <a href="mailto:augustin.floquet@icloud.com" style="color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700; text-decoration: none; border-bottom: 2px dashed var(--accent); padding-bottom: 2px;">augustin.floquet@icloud.com</a>
+  </div>
+
   <div style="text-align: center; padding: 40px 0 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-dim); opacity: 0.6;">
-    1.2.1
+    1.3.0
   </div>
 </div>
 
-<!-- Modale Cagnotte Animée -->
 <div class="modal-overlay" id="cagnotte-modal">
   <div class="modal-panel">
     <div class="modal-header">
@@ -399,7 +398,7 @@
 const $ = (id) => document.getElementById(id);
 const CAGNOTTE_URL = 'https://www.lepotcommun.fr/cagnotte/festive/ma-prochaine-platine-kc35w9qk?_se=YXVndXN0aW4uZmxvcXVldEBpY2xvdWQuY29t';
 
-// Gestion du Thème sombre/lumineux
+// Gestion Thème
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('floor_theme', t);
@@ -410,17 +409,20 @@ $('theme-toggle').addEventListener('click', () => {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 });
 
-// Gestion du Menu Rapide ☰
+// Gestion du Menu Plein Écran Toggling (☰ <-> ✕)
 $('menu-main-btn').addEventListener('click', (e) => {
   e.stopPropagation();
-  $('menu-box').classList.toggle('active');
+  const isActive = $('menu-box').classList.toggle('active');
+  $('menu-main-btn').textContent = isActive ? '✕' : '☰';
 });
 document.querySelectorAll('.menu-link').forEach(link => {
-  link.addEventListener('click', () => $('menu-box').classList.remove('active'));
+  link.addEventListener('click', () => {
+    $('menu-box').classList.remove('active');
+    $('menu-main-btn').textContent = '☰';
+  });
 });
-document.addEventListener('click', () => $('menu-box').classList.remove('active'));
 
-// Cagnotte (Animations fluides)
+// Cagnotte animations
 $('cagnotte-fab').addEventListener('click', () => {
   $('cagnotte-iframe').src = CAGNOTTE_URL;
   $('cagnotte-modal').classList.add('open');
@@ -440,7 +442,7 @@ function showToast(msg){
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// Envoi Titre Musique (Démarre bien à 0 vote côté serveur)
+// Envoi Musique
 $('submit-btn').addEventListener('click', async () => {
   const title = $('f-title').value.trim();
   const artist = $('f-artist').value.trim();
