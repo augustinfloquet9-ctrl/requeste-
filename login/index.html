@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floor Request — Connexion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5f3ec; --paper:#ffffff; --paper-line:#e2ded0;
+    --ink:#0a0a0a; --ink-dim:#6b6b75;
+    --accent:#2f6fed; --accent-ink:#ffffff;
+    --eyebrow:#2f6fed; --torn:#d8d4c4; --danger:#d93838;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Oswald',-apple-system,sans-serif;
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .card{
+    width:100%; max-width:420px;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:8px;
+    padding:30px;
+  }
+  .eyebrow{
+    font-family:'Zapfino','Brush Script MT',cursive;
+    font-size:22px; color:var(--eyebrow); text-align:center;
+  }
+  h1{
+    font-family:'Impact','Haettenschweiler',sans-serif;
+    font-size:30px; text-transform:uppercase; text-align:center;
+    font-weight:400; margin:4px 0 24px;
+  }
+  .tabs{ display:flex; border-bottom:1px dashed var(--torn); margin-bottom:20px; }
+  .tab{
+    flex:1; text-align:center; padding:10px;
+    font-family:'JetBrains Mono',monospace; font-size:12px;
+    text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+    color:var(--ink-dim); cursor:pointer; border-bottom:2px solid transparent;
+  }
+  .tab.active{ color:var(--accent); border-bottom-color:var(--accent); }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block; font-family:'JetBrains Mono',monospace; font-size:10px;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--ink-dim); margin-bottom:6px;
+  }
+  .field input{
+    width:100%; background:var(--bg); border:1px solid var(--paper-line);
+    border-radius:3px; color:var(--ink); font-family:'Oswald',sans-serif;
+    font-size:16px; padding:12px; outline:none;
+  }
+  .field input:focus{border-color:var(--accent);}
+  .submit{
+    width:100%; background:var(--accent); color:var(--accent-ink);
+    border:none; border-radius:3px; padding:13px;
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:14px;
+    text-transform:uppercase; letter-spacing:.06em; cursor:pointer; margin-top:4px;
+  }
+  .error{
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--danger);
+    text-align:center; margin-top:12px; display:none;
+  }
+  .form-panel{display:none;}
+  .form-panel.active{display:block;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="eyebrow">Espace DJ</div>
+  <h1>Floor Request</h1>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-login">Connexion</div>
+    <div class="tab" id="tab-register">Créer un compte</div>
+  </div>
+
+  <div class="form-panel active" id="panel-login">
+    <div class="field">
+      <label>Email</label>
+      <input id="login-email" type="email" placeholder="toi@exemple.com">
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input id="login-password" type="password" placeholder="••••••••">
+    </div>
+    <button class="submit" id="login-btn">Se connecter</button>
+    <div class="error" id="login-error"></div>
+  </div>
+
+  <div class="form-panel" id="panel-register">
+    <div class="field">
+      <label>Nom de scène / pseudo DJ</label>
+      <input id="reg-name" type="text" placeholder="ex: DJ Augustin">
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input id="reg-email" type="email" placeholder="toi@exemple.com">
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input id="reg-password" type="password" placeholder="6 caractères minimum">
+    </div>
+    <button class="submit" id="register-btn">Créer mon compte</button>
+    <div class="error" id="register-error"></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function showTab(name){
+  $('tab-login').classList.toggle('active', name === 'login');
+  $('tab-register').classList.toggle('active', name === 'register');
+  $('panel-login').classList.toggle('active', name === 'login');
+  $('panel-register').classList.toggle('active', name === 'register');
+}
+$('tab-login').addEventListener('click', () => showTab('login'));
+$('tab-register').addEventListener('click', () => showTab('register'));
+
+function showError(id, msg){
+  const el = $(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+$('login-btn').addEventListener('click', async () => {
+  const email = $('login-email').value.trim();
+  const password = $('login-password').value;
+  $('login-error').style.display = 'none';
+  try{
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if(!res.ok) return showError('login-error', data.error || 'Erreur de connexion');
+    window.location.href = '/dj-app/' + data.slug;
+  }catch(e){
+    showError('login-error', 'Erreur reseau, reessaie');
+  }
+});
+
+$('register-btn').addEventListener('click', async () => {
+  const displayName = $('reg-name').value.trim();
+  const email = $('reg-email').value.trim();
+  const password = $('reg-password').value;
+  $('register-error').style.display = 'none';
+  try{
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ displayName, email, password }),
+    });
+    const data = await res.json();
+    if(!res.ok) return showError('register-error', data.error || 'Erreur a l\'inscription');
+    window.location.href = '/dj-app/' + data.slug;
+  }catch(e){
+    showError('register-error', 'Erreur reseau, reessaie');
+  }
+});
+
+['login-email','login-password'].forEach(id => $(id).addEventListener('keydown', e => { if(e.key==='Enter') $('login-btn').click(); }));
+['reg-name','reg-email','reg-password'].forEach(id => $(id).addEventListener('keydown', e => { if(e.key==='Enter') $('register-btn').click(); }));
+</script>
+</body>
+</html>
