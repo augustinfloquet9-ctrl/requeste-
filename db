@@ -1,0 +1,24 @@
+const fs = require('fs');
+const path = require('path');
+
+const DB_DIR = path.join(__dirname, 'data');
+const DB_PATH = path.join(DB_DIR, 'db.json');
+
+function ensureDb() {
+  if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
+  if (!fs.existsSync(DB_PATH)) {
+    fs.writeFileSync(DB_PATH, JSON.stringify({ accounts: {}, state: {} }, null, 2));
+  }
+}
+
+function readDb() {
+  ensureDb();
+  return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+}
+
+function writeDb(db) {
+  ensureDb();
+  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+}
+
+module.exports = { readDb, writeDb };
